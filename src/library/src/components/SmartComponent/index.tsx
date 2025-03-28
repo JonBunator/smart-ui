@@ -1,5 +1,6 @@
 import {ReactNode, useEffect} from "react";
-import SmartComponentProvider, {SmartComponentValue, useSmartComponentManager} from "../SmartComponentProvider";
+import SmartComponentProvider, {SmartComponentValue, useSmartComponentParent} from "../SmartComponentProvider";
+import {useSmartComponentManager} from "../SmartComponentManager";
 
 
 interface SmartComponentProps extends SmartComponentValue {
@@ -9,11 +10,17 @@ interface SmartComponentProps extends SmartComponentValue {
 export function SmartComponent(props: SmartComponentProps) {
     const { children, ...smartProps } = props
 
-    const { addComponent } = useSmartComponentManager();
+    const { parentID } = useSmartComponentParent();
+    const { addComponent, removeComponent } = useSmartComponentManager();
 
     useEffect(() => {
-        addComponent(smartProps);
-    }, [addComponent, smartProps]);
+        addComponent(parentID, smartProps);
+        console.log(parentID, smartProps.smartID);
+
+        return () => {
+            removeComponent(parentID, smartProps.smartID);
+        }
+    }, [parentID, addComponent, smartProps.smartID, smartProps.smartSemantic, smartProps.value]);
 
     return <SmartComponentProvider identifier={smartProps.smartID}>{children}</SmartComponentProvider>
 }

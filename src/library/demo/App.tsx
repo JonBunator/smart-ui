@@ -1,19 +1,18 @@
 import {SmartComponent} from "../src/main";
-import SmartComponentProvider from "../src/components/SmartComponentProvider";
+import {useSmartComponentManager} from "../src/components/SmartComponentManager";
 //import {Button, SmartInput, Label} from "../src/main";
 
 function App() {
 
-    return (
-        <SmartComponentProvider identifier="root">
+    const {getHierarchy} = useSmartComponentManager();
+
+    return (<>
             <SmartComponent smartID="1">
-                <SmartComponent smartID="2"/>
-                <SmartComponent smartID="3">
-                    <SmartComponent smartID="5"/>
-                </SmartComponent>
-                <SmartComponent smartID="4"/>
+                <SmartComponent smartID="2" smartSemantic="email" />
+                <SmartComponent smartID="3" smartSemantic="username" />
             </SmartComponent>
-        </SmartComponentProvider>
+            <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>CLick</button>
+        </>
     )
 }
 
