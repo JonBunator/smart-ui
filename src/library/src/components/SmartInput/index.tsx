@@ -1,17 +1,20 @@
 import React from "react";
+import { SmartComponent } from "../SmartComponent";
 
 
 interface SmartComponent {
+  smartID: string;
   smartSemantic: string;
 }
 
-interface SmartInputProps extends React.InputHTMLAttributes<HTMLInputElement>, SmartComponent {
-
-}
+interface SmartInputProps extends React.InputHTMLAttributes<HTMLInputElement>, SmartComponent {}
 
 export function SmartInput(props: SmartInputProps) {
-  const { className, ...restProps } = props
+  const { smartID, value, smartSemantic, ...restProps } = props
 
-
-  return <input className={`${className}`} {...restProps} />
+  return (
+      <SmartComponent id={smartID ?? "UNIQUE_STRING"} value={value} semantic={smartSemantic} type="textfield">
+          <input  value={value} {...restProps} />
+      </SmartComponent>
+  )
 }

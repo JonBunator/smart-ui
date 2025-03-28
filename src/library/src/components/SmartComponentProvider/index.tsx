@@ -1,11 +1,5 @@
 import {createContext, useContext, ReactNode} from 'react';
 
-export interface SmartComponentValue {
-    smartID: string;
-    smartSemantic?: string;
-    value?: string;
-}
-
 interface SmartComponentContextType {
     parentID: string;
 }

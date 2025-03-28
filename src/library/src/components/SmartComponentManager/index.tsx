@@ -1,10 +1,11 @@
-import {createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect} from 'react';
+import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
 import SmartComponentProvider from "../SmartComponentProvider";
 
 export interface SmartComponentValue {
-    smartID: string;
-    smartSemantic?: string;
-    value?: string;
+    id: string;
+    semantic?: string;
+    type?: string;
+    value?: string | number | readonly string[];
 }
 
 interface SmartComponentElementInternal {
@@ -41,14 +42,14 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
     const addComponent = useCallback((parentID: string, value: SmartComponentValue) => {
         setElements(prev => {
             const newMap = new Map(prev);
-            newMap.set(value.smartID, value);
+            newMap.set(value.id, value);
             return newMap;
         });
 
         setParentChildrenMapping(prev => {
             const newMap = new Map(prev);
             const existingChildren = newMap.get(parentID);
-            newMap.set(parentID, new Set([...existingChildren ?? [], value.smartID]));
+            newMap.set(parentID, new Set([...existingChildren ?? [], value.id]));
             return newMap;
         });
     }, []);
@@ -72,11 +73,6 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
             return newMap;
         });
     }, []);
-
-    useEffect(() => {
-        console.log(elements);
-        console.log(parentChildrenMapping);
-    }, [elements, parentChildrenMapping]);
 
     const getHierarchy = useCallback((): SmartComponentElement[] => {
         const buildHierarchy = (identifier: string): SmartComponentElement | null => {
@@ -109,7 +105,6 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
         getHierarchy: getHierarchy,
     }), [addComponent, removeComponent, getHierarchy]);
 
-    console.log("UPDATE")
     return (
         <SmartComponentProvider identifier="root">
             <SmartComponentContext.Provider value={value}>
