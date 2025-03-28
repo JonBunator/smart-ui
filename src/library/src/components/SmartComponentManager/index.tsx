@@ -13,9 +13,8 @@ interface SmartComponentElementInternal {
     children: SmartComponentElementMap | null;
 }
 
-interface SmartComponentElement {
-    value: SmartComponentValue;
-    children: SmartComponentElement[];
+interface SmartComponentElement extends SmartComponentValue {
+    children: SmartComponentElement[] | undefined;
 }
 
 interface SmartComponentContextType {
@@ -89,8 +88,8 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
                 }
             });
             return {
-                value,
-                children: children,
+                ...value,
+                children: children.length !== 0 ? children : undefined,
             };
         };
         const rootChildrenIDs: string[] = Array.from(parentChildrenMapping.get("root") ?? new Set())
