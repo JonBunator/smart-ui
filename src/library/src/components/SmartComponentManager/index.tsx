@@ -1,11 +1,28 @@
 import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
-import SmartComponentProvider from "../SmartComponentProvider";
+import SmartComponentProvider from "../../internal/SmartComponentProvider";
+
 
 export interface SmartComponentValue {
+    /**
+     * Unique identifier.
+     */
     id: string;
-    semantic?: string;
-    type?: string;
+    /**
+     * Value of the smart component. For textfields this can be the inputted text.
+     */
     value?: string | number | readonly string[];
+
+    /**
+     * Additional properties.
+     */
+    [key: string]: any;
+}
+
+/**
+ * Element represents value of smart component and children.
+ */
+export interface SmartComponentElement extends SmartComponentValue {
+    children: SmartComponentElement[] | undefined;
 }
 
 interface SmartComponentElementInternal {
@@ -13,13 +30,22 @@ interface SmartComponentElementInternal {
     children: SmartComponentElementMap | null;
 }
 
-interface SmartComponentElement extends SmartComponentValue {
-    children: SmartComponentElement[] | undefined;
-}
-
 interface SmartComponentContextType {
+    /**
+     *
+     * @param parentID The identifier of the parent this component belongs to.
+     * @param value The value of the smart component that represents the current state.
+     */
     addComponent: (parentID: string, value: SmartComponentValue) => void;
+    /**
+     * Removes the component from parent.
+     * @param parentID The identifier of the parent this component belongs to.
+     * @param identifier The identifier of the component.
+     */
     removeComponent: (parentID: string, identifier: string) => void;
+    /**
+     * Returns all elements of the root.
+     */
     getHierarchy: () => SmartComponentElement[];
 }
 

@@ -1,9 +1,9 @@
 import {ReactNode, useEffect} from "react";
-import SmartComponentProvider, {useSmartComponentParent} from "../SmartComponentProvider";
+import SmartComponentProvider, {useSmartComponentParent} from "../../internal/SmartComponentProvider";
 import {SmartComponentValue, useSmartComponentManager} from "../SmartComponentManager";
 
 
-interface SmartComponentProps extends SmartComponentValue {
+export type SmartComponentProps = SmartComponentValue & {
     children?: ReactNode;
 }
 

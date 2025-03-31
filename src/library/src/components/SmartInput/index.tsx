@@ -7,14 +7,14 @@ interface SmartComponent {
   smartSemantic: string;
 }
 
-interface SmartInputProps extends React.InputHTMLAttributes<HTMLInputElement>, SmartComponent {}
+export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponent;
 
 export function SmartInput(props: SmartInputProps) {
-  const { smartID, value, smartSemantic, ...restProps } = props
+  const { smartID, value, type, smartSemantic, ...restProps } = props
 
   return (
-      <SmartComponent id={smartID ?? "UNIQUE_STRING"} value={value} semantic={smartSemantic} type="textfield">
-          <input  value={value} {...restProps} />
+      <SmartComponent id={smartID ?? "UNIQUE_STRING"} value={value} semantic={smartSemantic} type={type}>
+          <input value={value} type={type} {...restProps} />
       </SmartComponent>
   )
 }
