@@ -6,13 +6,13 @@ interface SmartComponentContextType {
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
 
-interface SubscriptionProviderProps {
+interface SmartComponentParentProps {
     children: ReactNode;
     identifier: string;
 }
 
 
-export default function SmartComponentProvider(props: SubscriptionProviderProps) {
+export default function SmartComponentParent(props: SmartComponentParentProps) {
     const {children, identifier} = props;
 
     return (
@@ -25,7 +25,7 @@ export default function SmartComponentProvider(props: SubscriptionProviderProps)
 export function useSmartComponentParent(): SmartComponentContextType {
     const context = useContext(SmartComponentContext);
     if (!context) {
-        throw new Error('useSmartComponentParent must be used within a SmartComponentProvider');
+        throw new Error('useSmartComponentParent must be used within a SmartComponentParent');
     }
     return context;
 }

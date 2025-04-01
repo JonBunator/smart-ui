@@ -1,7 +1,12 @@
-import styles from './styles.module.css'
 import React from "react";
+import {SmartComponent} from "../SmartComponent";
 
-export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const { className, ...restProps } = props
-  return <button className={`${className} ${styles.button}`} {...restProps} />
+export function Button(props: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) {
+  const {id, ...restProps } = props
+
+  return (
+      <SmartComponent id={id ?? "other_val"}>
+        <button id={id} {...restProps} />
+      </SmartComponent>
+  )
 }

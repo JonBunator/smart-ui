@@ -5,18 +5,52 @@ import {useState} from "react";
 
 function App() {
 
-    const [email, setEmail] = useState();
 
     const {getHierarchy} = useSmartComponentManager();
 
     return (<>
-            <SmartComponent id="test">
-                <SmartInput smartID="1" smartSemantic="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-                <SmartInput smartID="2" smartSemantic="password"/>
-                <SmartInput type="radio" smartID="2" smartSemantic="password"/>
-                <SmartInput type="checkbox" smartID="3" smartSemantic="password"/>
+            <SmartComponent>
+                <label htmlFor="name">Name</label>
+                <SmartInput id="name" smartSemantic="Name" />
+
+                <label htmlFor="age">Age</label>
+                <SmartInput type="number" id="age" smartSemantic="Age" />
+
+                <SmartComponent id="gender">
+                    <div>
+                        <p>Gender:</p>
+                        <label htmlFor="age">Male</label>
+                        <SmartInput type="radio" id="gender-male" />
+
+                        <label htmlFor="age">Female</label>
+                        <SmartInput type="radio" id="gender-female" />
+
+                        <label htmlFor="age">Other</label>
+                        <SmartInput type="radio" id="gender-other" />
+                    </div>
+                </SmartComponent>
+
+                <SmartComponent id="interests">
+                    <div>
+                        <p>Interests:</p>
+                        <label htmlFor="interests-sports">Sports</label>
+                        <SmartInput type="checkbox" id="interests-sports" value="sports"/>
+
+                        <label htmlFor="interests-music">Music</label>
+                        <SmartInput type="checkbox" id="interests-music" value="music"/>
+
+                        <label htmlFor="interests-reading">Reading</label>
+                        <SmartInput type="checkbox" id="interests-reading" value="reading"/>
+
+                        <label htmlFor="interests-other">Other</label>
+                        <SmartInput type="textarea" id="interests-other" />
+                    </div>
+                    <SmartInput id="vutton" type="button" onClick={() => console.log("clicked")}></SmartInput>
+                </SmartComponent>
             </SmartComponent>
-            <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>CLick</button>
+        <SmartComponent/>
+
+        <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>Print structure</button>
         </>
     )
 }

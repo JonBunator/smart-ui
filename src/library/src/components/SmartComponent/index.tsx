@@ -1,14 +1,20 @@
 import {ReactNode, useEffect} from "react";
-import SmartComponentProvider, {useSmartComponentParent} from "../../internal/SmartComponentProvider";
-import {SmartComponentValue, useSmartComponentManager} from "../SmartComponentManager";
+import SmartComponentParent, {useSmartComponentParent} from "../../internal/SmartComponentParent";
+import {useSmartComponentManager} from "../SmartComponentManager";
+import {SmartComponentValue} from "../types/types.ts";
 
 
 export type SmartComponentProps = SmartComponentValue & {
+    /**
+     * Callback that is invoked by AI agent. Changes value of component.
+     * @param value
+     */
+    smartOnChange?: (value: string | number | readonly string[]) => void;
     children?: ReactNode;
 }
 
 export function SmartComponent(props: SmartComponentProps) {
-    const { children, ...smartProps } = props
+    const { children, smartOnChange, ...smartProps } = props
 
     const { parentID } = useSmartComponentParent();
     const { addComponent, removeComponent } = useSmartComponentManager();
@@ -21,5 +27,5 @@ export function SmartComponent(props: SmartComponentProps) {
         }
     }, [parentID, addComponent, smartProps.id, smartProps.semantic, smartProps.type, smartProps.value]);
 
-    return <SmartComponentProvider identifier={smartProps.id}>{children}</SmartComponentProvider>
+    return <SmartComponentParent identifier={smartProps.id}>{children}</SmartComponentParent>
 }

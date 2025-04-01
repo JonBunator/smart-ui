@@ -1,22 +1,6 @@
 import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
-import SmartComponentProvider from "../../internal/SmartComponentProvider";
-
-
-export interface SmartComponentValue {
-    /**
-     * Unique identifier.
-     */
-    id: string;
-    /**
-     * Value of the smart component. For textfields this can be the inputted text.
-     */
-    value?: string | number | readonly string[];
-
-    /**
-     * Additional properties.
-     */
-    [key: string]: any;
-}
+import SmartComponentParent from "../../internal/SmartComponentParent";
+import {SmartComponentValue} from "../types/types.ts";
 
 /**
  * Element represents value of smart component and children.
@@ -113,6 +97,7 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
                     children.push(childElement);
                 }
             });
+
             return {
                 ...value,
                 children: children.length !== 0 ? children : undefined,
@@ -124,18 +109,18 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
             .filter(result => result !== null);
     }, [elements, parentChildrenMapping]);
 
-    const value = useMemo(() => ({
+        const value = useMemo(() => ({
         addComponent: addComponent,
         removeComponent: removeComponent,
         getHierarchy: getHierarchy,
     }), [addComponent, removeComponent, getHierarchy]);
 
     return (
-        <SmartComponentProvider identifier="root">
+        <SmartComponentParent identifier="root">
             <SmartComponentContext.Provider value={value}>
                 {children}
             </SmartComponentContext.Provider>
-        </SmartComponentProvider>
+        </SmartComponentParent>
     );
 };
 
