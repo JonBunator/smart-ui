@@ -1,6 +1,6 @@
 import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
 import SmartComponentParent from "../../internal/SmartComponentParent";
-import {SmartComponentValue, ValueType} from "../types/types.ts";
+import {SmartComponentValue, ValueType, ValueUpdate} from "../types/types.ts";
 
 /**
  * Element represents value of smart component and children.
@@ -34,11 +34,15 @@ interface SmartComponentContextType {
     getHierarchy: () => SmartComponentElement[];
     /**
      * Changes a value of the component.
-     * @param identifier The id of the component.
-     * @param value The new value that should be set.
+     * @param update The id and value to be updated.
      */
-    changeValue: (identifier: string, value: ValueType) => void;
-    
+    changeValue: (update: ValueUpdate) => void;
+
+    /**
+     * Similar to changeValue, but updates multiple components.
+     * @param updates The ids and values to be updated.
+     */
+    changeMultipleValues: (updates: ValueUpdate[]) => void;
 }
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
@@ -126,21 +130,28 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
             .filter(result => result !== null);
     }, [elements, parentChildrenMapping]);
 
-    const changeValue = useCallback((identifier: string, value: ValueType): void => {
-        const onChangeFunction = elementOnChangeMapping.get(identifier);
+    const changeValue = useCallback((update: ValueUpdate): void => {
+        const onChangeFunction = elementOnChangeMapping.get(update.id);
 
         if (onChangeFunction) {
-            onChangeFunction(value);
+            onChangeFunction(update.value);
         } else {
-            console.warn(`No component found with identifier: ${identifier}`);
+            console.warn(`No component found with identifier: ${update.id}`);
         }
     }, [elementOnChangeMapping]);
+
+    const changeMultipleValues = useCallback((updates: ValueUpdate[]): void => {
+        for(const update of updates) {
+            changeValue(update);    
+        }
+    }, [changeValue]);
 
     const value = useMemo(() => ({
         addComponent: addComponent,
         removeComponent: removeComponent,
         getHierarchy: getHierarchy,
         changeValue: changeValue,
+        changeMultipleValues: changeMultipleValues,
     }), [addComponent, removeComponent, getHierarchy, changeValue]);
 
     return (

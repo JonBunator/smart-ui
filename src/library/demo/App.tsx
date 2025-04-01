@@ -1,11 +1,22 @@
 import {SmartComponent, SmartInput} from "../src/main";
 import {useSmartComponentManager} from "../src/components/SmartComponentManager";
+import {useState} from "react";
 //import {Button, SmartInput, Label} from "../src/main";
 
 function App() {
 
 
-    const {getHierarchy, changeValue} = useSmartComponentManager();
+    const {getHierarchy, changeMultipleValues} = useSmartComponentManager();
+    const [updateValue, setUpdateValue] = useState("[\n" +
+        "  {\n" +
+        "    \"id\": \"interests-music\",\n" +
+        "    \"value\": true\n" +
+        "  },\n" +
+        "  {\n" +
+        "    \"id\": \"name\",\n" +
+        "    \"value\": \"Max\"\n" +
+        "  }\n" +
+        "]");
 
     return (<>
             <SmartComponent>
@@ -48,8 +59,8 @@ function App() {
             </SmartComponent>
         <br/>
         <br/>
-        <textarea style={{height: "400px", width: "100%"}}/>
-        <button onClick={() => changeValue("gender-female", true)}>Update value</button>
+        <textarea style={{height: "400px", width: "100%", lineHeight: "12px"}} value={updateValue} onChange={(event) => setUpdateValue(event.target.value)}/>
+        <button onClick={() => changeMultipleValues(JSON.parse(updateValue))}>Update value</button>
         <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>Print structure</button>
         </>
     )

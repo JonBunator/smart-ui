@@ -18,3 +18,17 @@ export interface SmartComponentValue {
 }
 
 export type ValueType = string | number | readonly string[] | boolean;
+
+/**
+ * Is used to update the value of a smart component.
+ */
+export type ValueUpdate = {
+    /**
+     * Unique identifier.
+     */
+    id: string;
+    /**
+     * Updated value.
+     */
+    value: ValueType;
+}
