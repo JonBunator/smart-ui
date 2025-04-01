@@ -109,7 +109,7 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
             .filter(result => result !== null);
     }, [elements, parentChildrenMapping]);
 
-        const value = useMemo(() => ({
+    const value = useMemo(() => ({
         addComponent: addComponent,
         removeComponent: removeComponent,
         getHierarchy: getHierarchy,

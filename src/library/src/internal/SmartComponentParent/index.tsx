@@ -11,7 +11,9 @@ interface SmartComponentParentProps {
     identifier: string;
 }
 
-
+/**
+ * Passes identifier to children
+ */
 export default function SmartComponentParent(props: SmartComponentParentProps) {
     const {children, identifier} = props;
 

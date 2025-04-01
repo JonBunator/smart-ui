@@ -35,8 +35,8 @@ export function SmartInput(props: SmartInputProps) {
     }
 
   return (
-      <SmartComponent id={id ?? "UNIQUE_STRING"} value={value} semantic={smartSemantic} type={type as string}>
-          <input ref={inputRef} value={value} onChange={onChange} type={type ?? "text"} {...restProps}/>
+      <SmartComponent id={id} value={value} semantic={smartSemantic} type={type as string}>
+          <input ref={inputRef} id={id} value={value} onChange={onChange} type={type ?? "text"} {...restProps}/>
           <button onClick={() => {updateValue("sports")}}>test</button>
       </SmartComponent>
   )

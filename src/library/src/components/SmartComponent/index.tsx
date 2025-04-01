@@ -1,31 +1,40 @@
-import {ReactNode, useEffect} from "react";
+import {ReactNode, useEffect, useState} from "react";
 import SmartComponentParent, {useSmartComponentParent} from "../../internal/SmartComponentParent";
 import {useSmartComponentManager} from "../SmartComponentManager";
 import {SmartComponentValue} from "../types/types.ts";
 
+function getID() {
+    return Math.random().toString(36).substr(2, 9);
+}
 
-export type SmartComponentProps = SmartComponentValue & {
+export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
+    /**
+     * Unique identifier.
+     */
+    id?: string;
     /**
      * Callback that is invoked by AI agent. Changes value of component.
-     * @param value
+     * @param value The newly set value.
      */
     smartOnChange?: (value: string | number | readonly string[]) => void;
     children?: ReactNode;
 }
 
 export function SmartComponent(props: SmartComponentProps) {
-    const { children, smartOnChange, ...smartProps } = props
+    const { children, id, smartOnChange, ...smartProps } = props;
 
     const { parentID } = useSmartComponentParent();
     const { addComponent, removeComponent } = useSmartComponentManager();
 
+    const [componentId] = useState(id ?? getID());
+
     useEffect(() => {
-        addComponent(parentID, smartProps);
+        addComponent(parentID, {...smartProps, id: componentId});
 
         return () => {
-            removeComponent(parentID, smartProps.id);
+            removeComponent(parentID, componentId);
         }
-    }, [parentID, addComponent, smartProps.id, smartProps.semantic, smartProps.type, smartProps.value]);
+    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value]);
 
-    return <SmartComponentParent identifier={smartProps.id}>{children}</SmartComponentParent>
+    return <SmartComponentParent identifier={componentId}>{children}</SmartComponentParent>
 }

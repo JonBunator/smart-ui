@@ -1,6 +1,5 @@
 import {SmartComponent, SmartInput} from "../src/main";
 import {useSmartComponentManager} from "../src/components/SmartComponentManager";
-import {useState} from "react";
 //import {Button, SmartInput, Label} from "../src/main";
 
 function App() {
@@ -48,7 +47,7 @@ function App() {
                     <SmartInput id="vutton" type="button" onClick={() => console.log("clicked")}></SmartInput>
                 </SmartComponent>
             </SmartComponent>
-        <SmartComponent/>
+
 
         <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>Print structure</button>
         </>
