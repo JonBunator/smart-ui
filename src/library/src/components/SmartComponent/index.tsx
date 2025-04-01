@@ -1,7 +1,7 @@
 import {ReactNode, useEffect, useState} from "react";
 import SmartComponentParent, {useSmartComponentParent} from "../../internal/SmartComponentParent";
 import {useSmartComponentManager} from "../SmartComponentManager";
-import {SmartComponentValue} from "../types/types.ts";
+import {SmartComponentValue, ValueType} from "../types/types.ts";
 
 function getID() {
     return Math.random().toString(36).substr(2, 9);
@@ -16,7 +16,7 @@ export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
      * Callback that is invoked by AI agent. Changes value of component.
      * @param value The newly set value.
      */
-    smartOnChange?: (value: string | number | readonly string[]) => void;
+    smartOnChange?: (value: ValueType) => void;
     children?: ReactNode;
 }
 
@@ -29,7 +29,7 @@ export function SmartComponent(props: SmartComponentProps) {
     const [componentId] = useState(id ?? getID());
 
     useEffect(() => {
-        addComponent(parentID, {...smartProps, id: componentId});
+        addComponent(parentID, {...smartProps, id: componentId}, smartOnChange);
 
         return () => {
             removeComponent(parentID, componentId);

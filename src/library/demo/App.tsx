@@ -5,7 +5,7 @@ import {useSmartComponentManager} from "../src/components/SmartComponentManager"
 function App() {
 
 
-    const {getHierarchy} = useSmartComponentManager();
+    const {getHierarchy, changeValue} = useSmartComponentManager();
 
     return (<>
             <SmartComponent>
@@ -33,22 +33,23 @@ function App() {
                     <div>
                         <p>Interests:</p>
                         <label htmlFor="interests-sports">Sports</label>
-                        <SmartInput type="checkbox" id="interests-sports" value="sports"/>
+                        <SmartInput type="checkbox" id="interests-sports"/>
 
                         <label htmlFor="interests-music">Music</label>
-                        <SmartInput type="checkbox" id="interests-music" value="music"/>
+                        <SmartInput type="checkbox" id="interests-music"/>
 
                         <label htmlFor="interests-reading">Reading</label>
-                        <SmartInput type="checkbox" id="interests-reading" value="reading"/>
+                        <SmartInput type="checkbox" id="interests-reading"/>
 
                         <label htmlFor="interests-other">Other</label>
                         <SmartInput type="textarea" id="interests-other" />
                     </div>
-                    <SmartInput id="vutton" type="button" onClick={() => console.log("clicked")}></SmartInput>
                 </SmartComponent>
             </SmartComponent>
-
-
+        <br/>
+        <br/>
+        <textarea style={{height: "400px", width: "100%"}}/>
+        <button onClick={() => changeValue("gender-female", true)}>Update value</button>
         <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>Print structure</button>
         </>
     )

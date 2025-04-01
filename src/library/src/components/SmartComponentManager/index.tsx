@@ -1,6 +1,6 @@
 import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
 import SmartComponentParent from "../../internal/SmartComponentParent";
-import {SmartComponentValue} from "../types/types.ts";
+import {SmartComponentValue, ValueType} from "../types/types.ts";
 
 /**
  * Element represents value of smart component and children.
@@ -19,8 +19,9 @@ interface SmartComponentContextType {
      *
      * @param parentID The identifier of the parent this component belongs to.
      * @param value The value of the smart component that represents the current state.
+     * @param smartOnChange Callback that invokes value change in smart component.
      */
-    addComponent: (parentID: string, value: SmartComponentValue) => void;
+    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => void) => void;
     /**
      * Removes the component from parent.
      * @param parentID The identifier of the parent this component belongs to.
@@ -31,6 +32,13 @@ interface SmartComponentContextType {
      * Returns all elements of the root.
      */
     getHierarchy: () => SmartComponentElement[];
+    /**
+     * Changes a value of the component.
+     * @param identifier The id of the component.
+     * @param value The new value that should be set.
+     */
+    changeValue: (identifier: string, value: ValueType) => void;
+    
 }
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
@@ -42,18 +50,27 @@ interface SubscriptionProviderProps {
 type SmartComponentElementMap = Map<string, SmartComponentElementInternal>;
 type SmartComponentValueMap = Map<string, SmartComponentValue>;
 type ParentChildMap = Map<string, Set<string>>;
+type ElementOnChangeMap = Map<string, (value: ValueType) => void>;
 
 export default function SmartComponentManager(props: SubscriptionProviderProps) {
     const {children} = props;
     const [elements, setElements] = useState<SmartComponentValueMap>(new Map());
     const [parentChildrenMapping, setParentChildrenMapping] = useState<ParentChildMap>(new Map());
+    const [elementOnChangeMapping, setElementOnChangeMapping] = useState<ElementOnChangeMap>(new Map());
 
-    const addComponent = useCallback((parentID: string, value: SmartComponentValue) => {
+    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => void) => {
         setElements(prev => {
             const newMap = new Map(prev);
             newMap.set(value.id, value);
             return newMap;
         });
+        if(smartOnChange) {
+            setElementOnChangeMapping(prev => {
+                const newMap = new Map(prev);
+                newMap.set(value.id, smartOnChange);
+                return newMap;
+            });
+        }
 
         setParentChildrenMapping(prev => {
             const newMap = new Map(prev);
@@ -109,11 +126,22 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
             .filter(result => result !== null);
     }, [elements, parentChildrenMapping]);
 
+    const changeValue = useCallback((identifier: string, value: ValueType): void => {
+        const onChangeFunction = elementOnChangeMapping.get(identifier);
+
+        if (onChangeFunction) {
+            onChangeFunction(value);
+        } else {
+            console.warn(`No component found with identifier: ${identifier}`);
+        }
+    }, [elementOnChangeMapping]);
+
     const value = useMemo(() => ({
         addComponent: addComponent,
         removeComponent: removeComponent,
         getHierarchy: getHierarchy,
-    }), [addComponent, removeComponent, getHierarchy]);
+        changeValue: changeValue,
+    }), [addComponent, removeComponent, getHierarchy, changeValue]);
 
     return (
         <SmartComponentParent identifier="root">

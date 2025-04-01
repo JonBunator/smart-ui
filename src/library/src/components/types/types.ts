@@ -10,9 +10,11 @@ export interface SmartComponentValue {
     /**
      * Value of the smart component. For textfields this can be the inputted text.
      */
-    value?: string | number | readonly string[];
+    value?: ValueType;
     /**
      * Additional properties.
      */
     [key: string]: any;
 }
+
+export type ValueType = string | number | readonly string[] | boolean;
