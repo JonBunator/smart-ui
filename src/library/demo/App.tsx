@@ -1,12 +1,9 @@
-import {SmartComponent, SmartInput} from "../src/main";
-import {useSmartComponentManager} from "../src/components/SmartComponentManager";
-import {useState} from "react";
-//import {Button, SmartInput, Label} from "../src/main";
+import { SmartComponent, SmartInput } from "../src/main";
+import { useSmartComponentManager } from "../src/components/SmartComponentManager";
+import { useState } from "react";
 
 function App() {
-
-
-    const {getHierarchy, changeMultipleValues} = useSmartComponentManager();
+    const { getHierarchy, changeMultipleValues } = useSmartComponentManager();
     const [updateValue, setUpdateValue] = useState("[\n" +
         "  {\n" +
         "    \"id\": \"interests-music\",\n" +
@@ -18,25 +15,37 @@ function App() {
         "  }\n" +
         "]");
 
-    return (<>
+    const [name, setName] = useState("");
+    const [age, setAge] = useState("");
+    const [gender, setGender] = useState("");
+    const [interests, setInterests] = useState({
+        sports: false,
+        music: false,
+        reading: false,
+        other: ""
+    });
+
+
+    return (
+        <>
             <SmartComponent>
                 <label htmlFor="name">Name</label>
-                <SmartInput id="name" smartSemantic="Name" />
+                <SmartInput id="name" smartSemantic="Name" value={name} onChange={(e) => setName(e.target.value)} />
 
                 <label htmlFor="age">Age</label>
-                <SmartInput type="number" id="age" smartSemantic="Age" />
+                <SmartInput type="number" id="age" smartSemantic="Age" value={age} onChange={(e) => setAge(e.target.value)} />
 
                 <SmartComponent id="gender">
                     <div>
                         <p>Gender:</p>
-                        <label htmlFor="age">Male</label>
-                        <SmartInput type="radio" id="gender-male" />
+                        <label htmlFor="gender-male">Male</label>
+                        <SmartInput type="radio" id="gender-male" checked={gender === "male"} onChange={() => setGender("male")} />
 
-                        <label htmlFor="age">Female</label>
-                        <SmartInput type="radio" id="gender-female" />
+                        <label htmlFor="gender-female">Female</label>
+                        <SmartInput type="radio" id="gender-female" checked={gender === "female"} onChange={() => setGender("female")} />
 
-                        <label htmlFor="age">Other</label>
-                        <SmartInput type="radio" id="gender-other" />
+                        <label htmlFor="gender-other">Other</label>
+                        <SmartInput type="radio" id="gender-other" checked={gender === "other"} onChange={() => setGender("other")} />
                     </div>
                 </SmartComponent>
 
@@ -44,26 +53,26 @@ function App() {
                     <div>
                         <p>Interests:</p>
                         <label htmlFor="interests-sports">Sports</label>
-                        <SmartInput type="checkbox" id="interests-sports"/>
+                        <SmartInput onClick={() => console.log("sports clicked")} type="checkbox" id="interests-sports" checked={interests.sports} onChange={(e) => setInterests((prevInterests) => ({ ...prevInterests, sports: e.target.checked }))} />
 
                         <label htmlFor="interests-music">Music</label>
-                        <SmartInput type="checkbox" id="interests-music"/>
+                        <SmartInput onClick={() => console.log("music clicked")} type="checkbox" id="interests-music" checked={interests.music} onChange={(e) => setInterests((prevInterests) => ({ ...prevInterests, music: e.target.checked }))} />
 
                         <label htmlFor="interests-reading">Reading</label>
-                        <SmartInput type="checkbox" id="interests-reading"/>
+                        <SmartInput onClick={() => console.log("reading clicked")} type="checkbox" id="interests-reading" checked={interests.reading} onChange={(e) => setInterests((prevInterests) => ({ ...prevInterests, reading: e.target.checked }))} />
 
                         <label htmlFor="interests-other">Other</label>
-                        <SmartInput type="textarea" id="interests-other" />
+                        <SmartInput type="textarea" id="interests-other" value={interests.other} onChange={(e) => setInterests((prevInterests) => ({ ...prevInterests, other: e.target.value }))} />
                     </div>
                 </SmartComponent>
             </SmartComponent>
-        <br/>
-        <br/>
-        <textarea style={{height: "400px", width: "100%", lineHeight: "12px"}} value={updateValue} onChange={(event) => setUpdateValue(event.target.value)}/>
-        <button onClick={() => changeMultipleValues(JSON.parse(updateValue))}>Update value</button>
-        <button onClick={() => {console.log(JSON.stringify(getHierarchy()))}}>Print structure</button>
+            <br />
+            <br />
+            <textarea style={{ height: "400px", width: "100%", lineHeight: "12px" }} value={updateValue} onChange={(event) => setUpdateValue(event.target.value)} />
+            <button onClick={() => changeMultipleValues(JSON.parse(updateValue))}>Update value</button>
+            <button onClick={() => { console.log(JSON.stringify(getHierarchy())) }}>Print structure</button>
         </>
-    )
+    );
 }
 
-export default App
+export default App;

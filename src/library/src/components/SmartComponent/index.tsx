@@ -24,9 +24,13 @@ export function SmartComponent(props: SmartComponentProps) {
     const { children, id, smartOnChange, ...smartProps } = props;
 
     const { parentID } = useSmartComponentParent();
-    const { addComponent, removeComponent } = useSmartComponentManager();
+    const { addComponent, removeComponent, updateOnChange } = useSmartComponentManager();
 
     const [componentId] = useState(id ?? getID());
+
+    useEffect(() => {
+        updateOnChange(componentId, smartOnChange);
+    }, [componentId, smartOnChange, updateOnChange]);
 
     useEffect(() => {
         addComponent(parentID, {...smartProps, id: componentId}, smartOnChange);
