@@ -1,14 +1,8 @@
-import React, {ReactNode, useCallback, useRef} from "react";
+import React, { useCallback, useRef} from "react";
 import { SmartComponent } from "../SmartComponent";
-import {ValueType} from "../types/types.ts";
+import {ValueType, SmartComponentElementProps} from "../types/types.ts";
 
-
-interface SmartComponent {
-  smartSemantic: string;
-  children?: ReactNode;
-}
-
-export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponent;
+export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponentElementProps;
 
 export function SmartInput(props: SmartInputProps) {
     const { value, onChange, type, id, checked, smartSemantic, ...restProps } = props
@@ -42,8 +36,11 @@ export function SmartInput(props: SmartInputProps) {
     }, [checked, type]);
 
   return (
-      <SmartComponent id={id} value={value} semantic={smartSemantic} type={type as string} smartOnChange={updateValue}>
-          <input ref={inputRef} id={id} checked={checked} value={value} onChange={onChange} type={type ?? "text"} {...restProps}/>
+      <SmartComponent id={id}
+                      value={type !== "button" ? value : undefined}
+                      label={type === "button" ? value : undefined}
+                      semantic={smartSemantic} type={type ?? "text" as string} smartOnChange={updateValue}>
+          <input ref={inputRef} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
       </SmartComponent>
   )
 }

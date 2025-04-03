@@ -1,3 +1,5 @@
+import {ReactNode} from "react";
+
 export interface SmartComponentValue {
     /**
      * Unique identifier.
@@ -7,6 +9,10 @@ export interface SmartComponentValue {
      * Type to differentiate the smart component. Can be text, select, button etc.
      */
     type?: string;
+    /**
+     * Label to describe the smart component. For buttons this is the button text.
+     */
+    label?: string;
     /**
      * Value of the smart component. For textfields this can be the inputted text.
      */
@@ -31,4 +37,18 @@ export type ValueUpdate = {
      * Updated value.
      */
     value: ValueType;
+}
+
+/**
+ * Properties for components that use SmartComponent internally.
+ */
+export interface SmartComponentElementProps {
+    /**
+     * Semantic description of the component.
+     */
+    smartSemantic: string;
+    /**
+     * Children elements.
+     */
+    children?: ReactNode;
 }

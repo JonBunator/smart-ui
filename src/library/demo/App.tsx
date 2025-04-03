@@ -1,4 +1,4 @@
-import { SmartComponent, SmartInput } from "../src/main";
+import {SmartButton, SmartComponent, SmartInput} from "../src/main";
 import { useSmartComponentManager } from "../src/components/SmartComponentManager";
 import { useState } from "react";
 
@@ -66,6 +66,8 @@ function App() {
                     </div>
                 </SmartComponent>
             </SmartComponent>
+            <SmartButton id="smart-button" onClick={() => console.log("cliekd")}><div><div>test</div><div>234</div></div></SmartButton>
+            <SmartInput id="smart-button2" value="test2" type="button" onClick={() => console.log("cliekd")}></SmartInput>
             <br />
             <br />
             <textarea style={{ height: "400px", width: "100%", lineHeight: "12px" }} value={updateValue} onChange={(event) => setUpdateValue(event.target.value)} />
