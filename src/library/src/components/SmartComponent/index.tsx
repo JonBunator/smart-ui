@@ -4,7 +4,7 @@ import {useSmartComponentManager} from "../SmartComponentManager";
 import {SmartComponentValue, ValueType} from "../types/types.ts";
 
 function getID() {
-    return Math.random().toString(36).substr(2, 9);
+    return Math.random().toString(36).substring(9);
 }
 
 export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
@@ -24,13 +24,9 @@ export function SmartComponent(props: SmartComponentProps) {
     const { children, id, smartOnChange, ...smartProps } = props;
 
     const { parentID } = useSmartComponentParent();
-    const { addComponent, removeComponent, updateOnChange } = useSmartComponentManager();
+    const { addComponent, removeComponent } = useSmartComponentManager();
 
     const [componentId] = useState(id ?? getID());
-
-    useEffect(() => {
-        updateOnChange(componentId, smartOnChange);
-    }, [componentId, smartOnChange, updateOnChange]);
 
     useEffect(() => {
         addComponent(parentID, {...smartProps, id: componentId}, smartOnChange);
@@ -38,7 +34,7 @@ export function SmartComponent(props: SmartComponentProps) {
         return () => {
             removeComponent(parentID, componentId);
         }
-    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value]);
+    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value, smartProps.label, smartOnChange, removeComponent]);
 
     return <SmartComponentParent identifier={componentId}>{children}</SmartComponentParent>
 }

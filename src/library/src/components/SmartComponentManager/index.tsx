@@ -33,12 +33,6 @@ interface SmartComponentContextType {
      */
     getHierarchy: () => SmartComponentElement[];
     /**
-     * Updates the onChange callback of the component.
-     * @param identifier The id of the component.
-     * @param onChange The updated callback.
-     */
-    updateOnChange: (identifier: string, onChange?: (value: ValueType) => void) => void;
-    /**
      * Changes a value of the component.
      * @param update The id and value to be updated.
      */
@@ -108,15 +102,10 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
 
             return newMap;
         });
-    }, []);
 
-    const updateOnChange = useCallback((identifier: string, onChange?: (value: ValueType) => void): void => {
-        if(!onChange) {
-            return;
-        }
         setElementOnChangeMapping(prev => {
             const newMap = new Map(prev);
-            newMap.set(identifier, onChange);
+            newMap.delete(identifier);
             return newMap;
         });
     }, []);
@@ -166,11 +155,10 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
     const value = useMemo(() => ({
         addComponent: addComponent,
         removeComponent: removeComponent,
-        updateOnChange: updateOnChange,
         getHierarchy: getHierarchy,
         changeValue: changeValue,
         changeMultipleValues: changeMultipleValues,
-    }), [addComponent, removeComponent, updateOnChange, getHierarchy, changeValue, changeMultipleValues]);
+    }), [addComponent, removeComponent, getHierarchy, changeValue, changeMultipleValues]);
 
     return (
         <SmartComponentParent identifier="root">
