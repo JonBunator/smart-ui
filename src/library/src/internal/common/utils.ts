@@ -15,5 +15,13 @@ export const extractTextFromNode = (node: React.ReactNode): string | undefined =
             textContent += extractTextFromNode(element.props.children);
         }
     });
-    return textContent === '' ? undefined : textContent;
+    return textContent === '' ? undefined : textContent.trim();
 };
+
+/**
+ * Sleeps for milliseconds.
+ * @param ms Delay in milliseconds.
+ */
+export const sleep = (ms: number) => new Promise(
+    resolve => setTimeout(resolve, ms)
+);

@@ -1,6 +1,7 @@
 import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
 import SmartComponentParent from "../../internal/SmartComponentParent";
 import {SmartComponentValue, ValueType, ValueUpdate} from "../types/types.ts";
+import {sleep} from "../../internal/common/utils.ts";
 
 /**
  * Element represents value of smart component and children.
@@ -36,13 +37,13 @@ interface SmartComponentContextType {
      * Changes a value of the component.
      * @param update The id and value to be updated.
      */
-    changeValue: (update: ValueUpdate) => void;
+    changeValue: (update: ValueUpdate) => Promise<void>;
 
     /**
      * Similar to changeValue, but updates multiple components.
      * @param updates The ids and values to be updated.
      */
-    changeMultipleValues: (updates: ValueUpdate[]) => void;
+    changeMultipleValues: (updates: ValueUpdate[]) => Promise<void>;
 }
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
@@ -136,19 +137,24 @@ export default function SmartComponentManager(props: SubscriptionProviderProps) 
             .filter(result => result !== null);
     }, [elements, parentChildrenMapping]);
 
-    const changeValue = useCallback((update: ValueUpdate): void => {
+    const changeValue = useCallback(async (update: ValueUpdate): Promise<void> => {
         const onChangeFunction = elementOnChangeMapping.get(update.id);
+        const value = elements.get(update.id);
 
-        if (onChangeFunction) {
+        if (value && onChangeFunction) {
+            // Sleep before clicking on button to wait for state update.
+            if(value.type === "button") {
+                await sleep(1000);
+            }
             onChangeFunction(update.value);
         } else {
             console.warn(`No component found with identifier: ${update.id}`);
         }
-    }, [elementOnChangeMapping]);
+    }, [elementOnChangeMapping, elements]);
 
-    const changeMultipleValues = useCallback((updates: ValueUpdate[]): void => {
+    const changeMultipleValues = useCallback(async (updates: ValueUpdate[]): Promise<void> => {
         for(const update of updates) {
-            changeValue(update);    
+            await changeValue(update);
         }
     }, [changeValue]);
 
