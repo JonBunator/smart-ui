@@ -18,12 +18,33 @@ export interface SmartComponentValue {
      */
     value?: ValueType;
     /**
+     * Options of the select component.
+     */
+    options?: OptionType[];
+    /**
      * Additional properties.
      */
     [key: string]: any;
 }
 
-export type ValueType = string | number | readonly string[] | boolean;
+/**
+ * Allowed values for the value of a smart component.
+ */
+export type ValueType = string | number | boolean;
+
+/**
+ * Option of a select.
+ */
+export type OptionType = {
+    /**
+     * Value of the option.
+     */
+    value: string;
+    /**
+     * Label describing the option.
+     */
+    label: string;
+}
 
 /**
  * Is used to update the value of a smart component.

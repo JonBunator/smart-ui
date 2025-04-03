@@ -4,7 +4,7 @@ import {useSmartComponentManager} from "../SmartComponentManager";
 import {SmartComponentValue, ValueType} from "../types/types.ts";
 
 function getID() {
-    return Math.random().toString(36).substring(9);
+    return Math.random().toString(36).substring(2, 9);
 }
 
 export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
@@ -34,7 +34,7 @@ export function SmartComponent(props: SmartComponentProps) {
         return () => {
             removeComponent(parentID, componentId);
         }
-    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value, smartProps.label, smartOnChange, removeComponent]);
+    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value, smartProps.label, smartProps.options, smartOnChange, removeComponent]);
 
     return <SmartComponentParent identifier={componentId}>{children}</SmartComponentParent>
 }

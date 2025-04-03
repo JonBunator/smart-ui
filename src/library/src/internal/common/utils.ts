@@ -8,7 +8,7 @@ import React from "react";
 export const extractTextFromNode = (node: React.ReactNode): string | undefined => {
     let textContent = '';
     React.Children.forEach(node, (child) => {
-        if (typeof child === 'string') {
+        if (typeof child === 'string' || typeof child === 'number') {
             textContent += " " + child;
         } else if (React.isValidElement(child)) {
             const element = child as React.ReactElement<{ children?: React.ReactNode }>;

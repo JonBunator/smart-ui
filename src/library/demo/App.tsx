@@ -1,4 +1,4 @@
-import {SmartButton, SmartComponent, SmartInput} from "../src/main";
+import {SmartButton, SmartComponent, SmartInput, SmartSelect} from "../src/main";
 import { useSmartComponentManager } from "../src/components/SmartComponentManager";
 import { useState } from "react";
 
@@ -24,7 +24,7 @@ function App() {
         reading: false,
         other: ""
     });
-
+    const [animals, setAnimals] = useState("dog");
 
     return (
         <>
@@ -66,8 +66,12 @@ function App() {
                     </div>
                 </SmartComponent>
             </SmartComponent>
-            <SmartButton id="smart-button" onClick={() => console.log("cliekd")}><div><div>test</div><div>234</div></div></SmartButton>
-            <SmartInput id="smart-button2" value="test2" type="button" onClick={() => console.log("cliekd")}></SmartInput>
+            <SmartSelect id="favourite-animal" value={animals} onChange={(e) => setAnimals(e.target.value)}>
+                <option value="dog">Dog</option>
+                <option value="cat">Cat</option>
+                <option value="bird">Bird</option>
+            </SmartSelect>
+            <SmartButton id="smart-button" onClick={() => console.log("Test button was clicked")}>Test button</SmartButton>
             <br />
             <br />
             <textarea style={{ height: "400px", width: "100%", lineHeight: "12px" }} value={updateValue} onChange={(event) => setUpdateValue(event.target.value)} />
