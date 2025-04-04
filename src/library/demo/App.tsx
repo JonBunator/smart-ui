@@ -1,19 +1,12 @@
-import {SmartButton, SmartComponent, SmartInput, SmartSelect} from "../src/main";
-import { useSmartComponentManager } from "../src/components/SmartComponentManager";
+import {SmartButton, SmartComponent, SmartInput, SmartSelect, useSmartAgent} from "../src/main";
+import { useSmartComponentManager } from "../src/internal/SmartComponentManager";
 import { useState } from "react";
 
 function App() {
-    const { getHierarchy, changeMultipleValues } = useSmartComponentManager();
-    const [updateValue, setUpdateValue] = useState("[\n" +
-        "  {\n" +
-        "    \"id\": \"interests-music\",\n" +
-        "    \"value\": true\n" +
-        "  },\n" +
-        "  {\n" +
-        "    \"id\": \"name\",\n" +
-        "    \"value\": \"Max\"\n" +
-        "  }\n" +
-        "]");
+    const { getHierarchy } = useSmartComponentManager();
+    const {sendPrompt} = useSmartAgent();
+
+    const [updateValue, setUpdateValue] = useState("I am Max and 25 years old. I am male and like to play hockey.");
 
     const [name, setName] = useState("");
     const [age, setAge] = useState("");
@@ -75,7 +68,7 @@ function App() {
             <br />
             <br />
             <textarea style={{ height: "400px", width: "100%", lineHeight: "12px" }} value={updateValue} onChange={(event) => setUpdateValue(event.target.value)} />
-            <button onClick={() => changeMultipleValues(JSON.parse(updateValue))}>Update value</button>
+            <button onClick={() => sendPrompt(updateValue)}>Send</button>
             <button onClick={() => { console.log(JSON.stringify(getHierarchy())) }}>Print structure</button>
         </>
     );

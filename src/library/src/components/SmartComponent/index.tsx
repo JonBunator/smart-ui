@@ -1,6 +1,6 @@
 import {ReactNode, useEffect, useState} from "react";
 import SmartComponentParent, {useSmartComponentParent} from "../../internal/SmartComponentParent";
-import {useSmartComponentManager} from "../SmartComponentManager";
+import {useSmartComponentManager} from "../../internal/SmartComponentManager";
 import {SmartComponentValue, ValueType} from "../types/types.ts";
 
 function getID() {
