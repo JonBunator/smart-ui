@@ -1,4 +1,4 @@
-import OpenAI, {AzureOpenAI} from "openai";
+import {AzureOpenAI} from "openai";
 import {ValueUpdate} from "../types/types.ts";
 import { z } from "zod";
 import {zodResponseFormat} from "openai/helpers/zod";
@@ -13,7 +13,7 @@ const OutputSchema = z.object({
 });
 
 
-export async function callAgent(client: OpenAI, systemPrompt: string, userPrompt: string): Promise<ValueUpdate[]> {
+export async function callAgent(client: AzureOpenAI, systemPrompt: string, userPrompt: string): Promise<ValueUpdate[]> {
     const model = "gpt-4o";
     const response = await client.chat.completions.create({        model: model,
         messages: [
@@ -28,15 +28,4 @@ export async function callAgent(client: OpenAI, systemPrompt: string, userPrompt
     const content = response.choices[0].message.content ?? '';
     console.log(content);
     return JSON.parse(content).interactions;
-}
-
-export const azureOpenAIClient = () => {
-    const endpoint = import.meta.env.VITE_OPENAI_ENDPOINT;
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    const deployment = "gpt-4o";
-    const apiVersion = import.meta.env.VITE_OPENAI_API_VERSION;
-    // Only allow in development mode. This would otherwise expose API key in production
-    const dangerouslyAllowBrowser = import.meta.env.DEV;
-    const options = { endpoint, apiKey, deployment, apiVersion, dangerouslyAllowBrowser: dangerouslyAllowBrowser }
-    return new AzureOpenAI(options)
 }

@@ -1,8 +1,6 @@
 import {createContext, useContext, ReactNode, useMemo, useCallback} from 'react';
-import OpenAI from "openai";
 import {useSmartComponentManager} from "../../internal/SmartComponentManager";
 import {getNextUIStatePrompt} from "./agentPrompts.ts";
-import {callAgent} from "./openAI.ts";
 import {ValueUpdate} from "../types/types.ts";
 
 interface SmartAgentProviderContextType {
@@ -17,9 +15,11 @@ const SmartAgentProviderContext = createContext<SmartAgentProviderContextType | 
 
 export interface SmartAgentProviderProps {
     /**
-     * OpenAI API client used for the AI Agent.
+     * Callback used to send prompts to the AI agent.
+     * @param systemPrompt The system prompt of the agent. Used for system instructions.
+     * @param prompt The user specified prompt.
      */
-    openAIClient: OpenAI;
+    callAgent: (systemPrompt: string, prompt: string) => Promise<ValueUpdate[]>;
     /**
      * Children nodes.
      */
@@ -27,17 +27,17 @@ export interface SmartAgentProviderProps {
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {openAIClient, children} = props;
+    const {callAgent, children} = props;
 
     const {getHierarchy, changeMultipleValues} = useSmartComponentManager();
     
     const sendPrompt = useCallback(async (prompt: string): Promise<void> => {
         const state = getHierarchy();
         const systemPrompt = getNextUIStatePrompt(state);
-        const updates: ValueUpdate[]  = await callAgent(openAIClient, systemPrompt, prompt);
+        const updates: ValueUpdate[]  = await callAgent(systemPrompt, prompt);
         console.log(updates);
         await changeMultipleValues(updates);
-    }, [changeMultipleValues, getHierarchy, openAIClient]);
+    }, [callAgent, changeMultipleValues, getHierarchy]);
 
     const value = useMemo(() => ({
         sendPrompt: sendPrompt

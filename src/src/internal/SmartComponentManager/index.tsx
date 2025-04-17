@@ -57,11 +57,12 @@ type SmartComponentValueMap = Map<string, SmartComponentValue>;
 type ParentChildMap = Map<string, Set<string>>;
 type ElementOnChangeMap = Map<string, (value: ValueType) => void>;
 
-export default function SmartComponentManager(props: SubscriptionProviderProps) {
+export function SmartComponentManager(props: SubscriptionProviderProps) {
     const {children} = props;
     const [elements, setElements] = useState<SmartComponentValueMap>(new Map());
     const [parentChildrenMapping, setParentChildrenMapping] = useState<ParentChildMap>(new Map());
     const [elementOnChangeMapping, setElementOnChangeMapping] = useState<ElementOnChangeMap>(new Map());
+
 
     const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => void) => {
         setElements(prev => {

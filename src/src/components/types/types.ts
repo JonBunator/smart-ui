@@ -67,7 +67,7 @@ export interface SmartComponentElementProps {
     /**
      * Semantic description of the component.
      */
-    smartSemantic: string;
+    smartSemantic?: string;
     /**
      * Children elements.
      */
