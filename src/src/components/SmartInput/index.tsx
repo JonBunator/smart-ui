@@ -1,10 +1,10 @@
-import React, { useCallback, useRef} from "react";
+import React, {forwardRef, useCallback, useImperativeHandle, useRef} from "react";
 import { SmartComponent } from "../SmartComponent";
 import {ValueType, SmartComponentElementProps} from "../types/types.ts";
 
 export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponentElementProps;
 
-export function SmartInput(props: SmartInputProps) {
+const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) => {
     const { value, onChange, type, id, checked, smartSemantic, ...restProps } = props
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,6 +35,8 @@ export function SmartInput(props: SmartInputProps) {
         }
     }, [checked, type]);
 
+    useImperativeHandle(ref, () => inputRef.current!, []);
+
   return (
       <SmartComponent id={id}
                       value={type !== "button" ? value : undefined}
@@ -43,4 +45,6 @@ export function SmartInput(props: SmartInputProps) {
           <input ref={inputRef} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
       </SmartComponent>
   )
-}
+});
+
+export {SmartInput};
