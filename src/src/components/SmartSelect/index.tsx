@@ -1,6 +1,6 @@
 import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState} from "react";
 import {SmartComponent} from "../SmartComponent";
-import {OptionType, SmartComponentElementProps, ValueType} from "../types/types.ts";
+import {OptionType, SmartComponentElementProps, ValueType} from "../../utils/types.ts";
 
 export type SmartSelectProps =  React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement> & SmartComponentElementProps;
 

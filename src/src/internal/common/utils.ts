@@ -5,17 +5,17 @@ import React from "react";
  * will return string Test 123.
  * @param node
  */
-export const extractTextFromNode = (node: React.ReactNode): string | undefined => {
+export const extractTextFromNode = (node: React.ReactNode): string => {
     let textContent = '';
     React.Children.forEach(node, (child) => {
         if (typeof child === 'string' || typeof child === 'number') {
             textContent += " " + child;
-        } else if (React.isValidElement(child)) {
+        } else if (child !== undefined && React.isValidElement(child)) {
             const element = child as React.ReactElement<{ children?: React.ReactNode }>;
             textContent += extractTextFromNode(element.props.children);
         }
     });
-    return textContent === '' ? undefined : textContent.trim();
+    return textContent.trim();
 };
 
 /**

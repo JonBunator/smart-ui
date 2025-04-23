@@ -1,7 +1,7 @@
 import {ReactNode, useEffect, useState} from "react";
 import SmartComponentParent, {useSmartComponentParent} from "../../internal/SmartComponentParent";
-import {useSmartComponentManager} from "../../internal/SmartComponentManager";
-import {SmartComponentValue, ValueType} from "../types/types.ts";
+import {SmartComponentValue, ValueType} from "../../utils/types.ts";
+import {useSmartComponentManager} from "../SmartComponentManager";
 
 function getID() {
     return Math.random().toString(36).substring(2, 9);

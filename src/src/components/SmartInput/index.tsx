@@ -1,6 +1,6 @@
 import React, {forwardRef, useCallback, useImperativeHandle, useRef} from "react";
 import { SmartComponent } from "../SmartComponent";
-import {ValueType, SmartComponentElementProps} from "../types/types.ts";
+import {SmartComponentElementProps, ValueType} from "../../utils/types.ts";
 
 export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponentElementProps;
 

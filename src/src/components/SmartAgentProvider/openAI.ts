@@ -1,7 +1,7 @@
 import {AzureOpenAI} from "openai";
-import {ValueUpdate} from "../types/types.ts";
 import { z } from "zod";
 import {zodResponseFormat} from "openai/helpers/zod";
+import {ValueUpdate} from "../../utils/types.ts";
 
 const UIInteraction = z.object({
     id: z.string(),

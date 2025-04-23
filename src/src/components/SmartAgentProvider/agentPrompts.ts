@@ -1,4 +1,4 @@
-import {SmartComponentElement} from "../../internal/SmartComponentManager";
+import { SmartComponentElement } from "../SmartComponentManager";
 
 export function getNextUIStatePrompt(uiState: SmartComponentElement[]): string {
     return `You are an agent that helps users interact with user interfaces. This is the structure of the UI:

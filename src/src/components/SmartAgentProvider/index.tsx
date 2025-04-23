@@ -1,7 +1,7 @@
 import {createContext, useContext, ReactNode, useMemo, useCallback} from 'react';
-import {useSmartComponentManager} from "../../internal/SmartComponentManager";
 import {getNextUIStatePrompt} from "./agentPrompts.ts";
-import {ValueUpdate} from "../types/types.ts";
+import {ValueUpdate} from "../../utils/types.ts";
+import {useSmartComponentManager} from "../SmartComponentManager";
 
 interface SmartAgentProviderContextType {
     /**
