@@ -5,7 +5,7 @@ import {ValueUpdate} from "../../utils/types.ts";
 
 const UIInteraction = z.object({
     id: z.string(),
-    value: z.union([z.string(), z.boolean(), z.number()])
+    value: z.union([z.string(), z.boolean(), z.number(), z.array(z.string())])
 });
 
 const OutputSchema = z.object({

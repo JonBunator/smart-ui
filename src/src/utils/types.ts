@@ -22,15 +22,15 @@ export interface SmartComponentValue {
      */
     options?: OptionType[];
     /**
-     * Additional properties.
+     * Additional semantic descriptions.
      */
-    [key: string]: any;
+    semantic?: string;
 }
 
 /**
  * Allowed values for the value of a smart component.
  */
-export type ValueType = string | number | boolean;
+export type ValueType = string | number | boolean | readonly string[] | null;
 
 /**
  * Option of a select.
@@ -43,7 +43,7 @@ export type OptionType = {
     /**
      * Label describing the option.
      */
-    label: string;
+    label?: string;
 }
 
 /**

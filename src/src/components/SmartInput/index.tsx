@@ -40,7 +40,7 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
   return (
       <SmartComponent id={id}
                       value={type !== "button" ? value : undefined}
-                      label={type === "button" ? value : undefined}
+                      label={type === "button" ? value?.toString() : undefined}
                       semantic={smartSemantic} type={type ?? "text" as string} smartOnChange={updateValue}>
           <input ref={inputRef} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
       </SmartComponent>
