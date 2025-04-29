@@ -5,14 +5,14 @@ import {SmartComponentElementProps, ValueType} from "../../utils/types.ts";
 export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponentElementProps;
 
 const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) => {
-    const { value, onChange, type, id, checked, smartSemantic, ...restProps } = props
+    const { value, onChange, type, id, checked, className, smartSemantic, ...restProps } = props
     const inputRef = useRef<HTMLInputElement>(null);
 
     /**
      * Simulates user input value update.
      * @param newValue The new value.
      */
-    const updateValue = useCallback((newValue: ValueType) => {
+    const updateValue = useCallback(async (newValue: ValueType) => {
         if (inputRef.current) {
             if(type === "button") {
                 inputRef.current.click();
@@ -42,7 +42,7 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
                       value={type !== "button" ? value : undefined}
                       label={type === "button" ? value?.toString() : undefined}
                       semantic={smartSemantic} type={type ?? "text" as string} smartOnChange={updateValue}>
-          <input ref={inputRef} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
+          <input ref={inputRef} className={`${className} smart-component`} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
       </SmartComponent>
   )
 });

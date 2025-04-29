@@ -25,7 +25,7 @@ const SmartSelect = forwardRef<HTMLSelectElement, SmartSelectProps>((props, ref)
      * Simulates user input value update.
      * @param newValue The new value.
      */
-    const updateValue = useCallback((newValue: ValueType) => {
+    const updateValue = useCallback(async (newValue: ValueType) => {
         if (selectRef.current) {
             const nativeSelectValueSetter = Object.getOwnPropertyDescriptor(
                 window.HTMLSelectElement.prototype,

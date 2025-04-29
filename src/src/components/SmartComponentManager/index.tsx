@@ -1,6 +1,5 @@
-import {createContext, useContext, useState, ReactNode, useMemo, useCallback} from 'react';
+import {createContext, useContext, useState, ReactNode, useMemo, useCallback, useRef} from 'react';
 import {SmartComponentValue, ValueType, ValueUpdate} from "../../utils/types.ts";
-import {sleep} from "../../internal/common/utils.ts";
 import SmartComponentParent from "../../internal/SmartComponentParent";
 
 /**
@@ -21,8 +20,11 @@ interface SmartComponentContextType {
      * @param parentID The identifier of the parent this component belongs to.
      * @param value The value of the smart component that represents the current state.
      * @param smartOnChange Callback that invokes value change in smart component.
+     * @param handleChangeApproval Callback that invokes approval process in smart component. When accept is true,
+     * the changes where accepted. When false, the changes are denied and the previous value is set. value is the
+     * newly set value.
      */
-    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => void) => void;
+    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<void>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => void;
     /**
      * Removes the component from parent.
      * @param parentID The identifier of the parent this component belongs to.
@@ -34,16 +36,15 @@ interface SmartComponentContextType {
      */
     getHierarchy: () => SmartComponentElement[];
     /**
-     * Changes a value of the component.
-     * @param update The id and value to be updated.
+     * Suggests value change for components.
+     * @param updates The ids of the components and values to be updated.
      */
-    changeValue: (update: ValueUpdate) => Promise<void>;
-
+    suggestValueChanges: (updates: ValueUpdate[]) => Promise<void>;
     /**
-     * Similar to changeValue, but updates multiple components.
-     * @param updates The ids and values to be updated.
+     * Accept or deny suggested changes.
+     * @param accept Accepts the changes when true, clears them when false.
      */
-    changeMultipleValues: (updates: ValueUpdate[]) => Promise<void>;
+    handleChangeApproval: (accept: boolean) => void;
 }
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
@@ -55,16 +56,18 @@ interface SubscriptionProviderProps {
 type SmartComponentElementMap = Map<string, SmartComponentElementInternal>;
 type SmartComponentValueMap = Map<string, SmartComponentValue>;
 type ParentChildMap = Map<string, Set<string>>;
-type ElementOnChangeMap = Map<string, (value: ValueType) => void>;
+type ElementOnChangeMap = Map<string, (value: ValueType) => Promise<void>>;
+type ElementOnChangeApprovalMap = Map<string, (accept: boolean, value: ValueType) => void>;
 
 export function SmartComponentManager(props: SubscriptionProviderProps) {
     const {children} = props;
     const [elements, setElements] = useState<SmartComponentValueMap>(new Map());
     const [parentChildrenMapping, setParentChildrenMapping] = useState<ParentChildMap>(new Map());
     const [elementOnChangeMapping, setElementOnChangeMapping] = useState<ElementOnChangeMap>(new Map());
+    const [elementOnChangeApprovalMapping, setElementOnChangeApprovalMapping] = useState<ElementOnChangeApprovalMap>(new Map());
+    const suggestedValueChanges = useRef<ValueUpdate[]>([]);
 
-
-    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => void) => {
+    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<void>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => {
         setElements(prev => {
             const newMap = new Map(prev);
             newMap.set(value.id, value);
@@ -74,6 +77,14 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
             setElementOnChangeMapping(prev => {
                 const newMap = new Map(prev);
                 newMap.set(value.id, smartOnChange);
+                return newMap;
+            });
+        }
+
+        if(onChangeApproval) {
+            setElementOnChangeApprovalMapping(prev => {
+                const newMap = new Map(prev);
+                newMap.set(value.id, onChangeApproval);
                 return newMap;
             });
         }
@@ -143,17 +154,27 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         const value = elements.get(update.id);
 
         if (value && onChangeFunction) {
-            // Sleep before clicking on button to wait for state update.
-            if(value.type === "button") {
-                await sleep(1000);
-            }
-            onChangeFunction(update.value);
+            await onChangeFunction(update.value);
         } else {
             console.warn(`No component found with identifier: ${update.id}`);
         }
     }, [elementOnChangeMapping, elements]);
 
-    const changeMultipleValues = useCallback(async (updates: ValueUpdate[]): Promise<void> => {
+    const handleChangeApproval = useCallback((accept: boolean): void => {
+        for(const valueChange of suggestedValueChanges.current) {
+            const componentID = valueChange.id;
+            const changeApproval = elementOnChangeApprovalMapping.get(componentID);
+            if(changeApproval) {
+                changeApproval(accept, valueChange.value);
+            } else {
+                console.warn(`No component found with identifier: ${componentID}`);
+            }
+        }
+        
+    }, [elementOnChangeApprovalMapping]);
+
+    const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<void> => {
+        suggestedValueChanges.current = updates;
         for(const update of updates) {
             await changeValue(update);
         }
@@ -163,9 +184,9 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         addComponent: addComponent,
         removeComponent: removeComponent,
         getHierarchy: getHierarchy,
-        changeValue: changeValue,
-        changeMultipleValues: changeMultipleValues,
-    }), [addComponent, removeComponent, getHierarchy, changeValue, changeMultipleValues]);
+        suggestValueChanges: suggestValueChanges,
+        handleChangeApproval: handleChangeApproval,
+    }), [addComponent, removeComponent, getHierarchy, suggestValueChanges, handleChangeApproval]);
 
     return (
         <SmartComponentParent identifier="root">
@@ -174,7 +195,7 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
             </SmartComponentContext.Provider>
         </SmartComponentParent>
     );
-};
+}
 
 export function useSmartComponentManager(): SmartComponentContextType {
     const context = useContext(SmartComponentContext);

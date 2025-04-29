@@ -30,7 +30,7 @@ export interface SmartComponentValue {
 /**
  * Allowed values for the value of a smart component.
  */
-export type ValueType = string | number | boolean | readonly string[] | null;
+export type ValueType = string | number | boolean | readonly string[] | null | undefined;
 
 /**
  * Option of a select.
