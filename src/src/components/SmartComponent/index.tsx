@@ -18,6 +18,11 @@ export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
      */
     smartOnChange?: (value: ValueType) => Promise<void>;
     /**
+     * Callback that is invoked by AI agent. Approves agent changes.
+     * @param value The newly set value.
+     */
+    onApprove?: (accept: boolean) => void;
+    /**
      * When true, the value is only updated after approval. Defaults to false.
      */
     updateAfterApproval?: boolean;
@@ -25,7 +30,7 @@ export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
 }
 
 export function SmartComponent(props: SmartComponentProps) {
-    const { children, id, smartOnChange, updateAfterApproval = false, ...smartProps } = props;
+    const { children, id, smartOnChange, onApprove, updateAfterApproval = false, ...smartProps } = props;
 
     const [changesSuggested, setChangesSuggested] = useState<boolean>(false);
     const previousValue = useRef<ValueType|undefined>(undefined);
@@ -51,7 +56,8 @@ export function SmartComponent(props: SmartComponentProps) {
             smartOnChange?.(value);
         }
         setChangesSuggested(false);
-    }, [smartOnChange, updateAfterApproval]);
+        onApprove?.(accept);
+    }, [onApprove, smartOnChange, updateAfterApproval]);
 
     useEffect(() => {
         addComponent(parentID, {...smartProps, id: componentId}, onChange, handleChangeApproval);
