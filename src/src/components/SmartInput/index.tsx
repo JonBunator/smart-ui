@@ -1,4 +1,4 @@
-import React, {forwardRef, useCallback, useImperativeHandle, useRef} from "react";
+import React, {forwardRef, useCallback, useImperativeHandle, useRef, useState} from "react";
 import { SmartComponent } from "../SmartComponent";
 import {SmartComponentElementProps, ValueType} from "../../utils/types.ts";
 
@@ -7,6 +7,7 @@ export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<
 const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) => {
     const { value, onChange, type, id, checked, className, smartSemantic, ...restProps } = props
     const inputRef = useRef<HTMLInputElement>(null);
+    const [checkedValue, setCheckedValue] = useState<ValueType|undefined>(undefined);
 
     /**
      * Simulates user input value update.
@@ -19,11 +20,15 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
                 return;
             }
 
-            if(type === "radio" || type === "checkbox") {
+            if(type === "checkbox") {
                 if(checked !== newValue) {
                     inputRef.current.click();
                 }
                 return
+            }
+
+            if(type === "radio") {
+                setCheckedValue(newValue);
             }
             const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
                 window.HTMLInputElement.prototype,
@@ -35,13 +40,26 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
         }
     }, [checked, type]);
 
+    /**
+     * Radio value should be updated after approval, because click can't be undone.
+     */
+    const handleApprove = useCallback(async (accept: boolean) => {
+        if (accept && inputRef.current && type === "radio") {
+            if(checked !== checkedValue) {
+                inputRef.current.click();
+            }
+        }
+        setCheckedValue(undefined);
+    }, [checked, type, value]);
+
     useImperativeHandle(ref, () => inputRef.current!, []);
 
   return (
       <SmartComponent id={id}
                       value={type !== "button" ? value : undefined}
                       label={type === "button" ? value?.toString() : undefined}
-                      semantic={smartSemantic} type={type ?? "text" as string} smartOnChange={updateValue}>
+                      semantic={smartSemantic} type={type ?? "text" as string} smartOnChange={updateValue}
+                      onApprove={handleApprove}>
           <input ref={inputRef} className={`${className} smart-component`} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
       </SmartComponent>
   )
