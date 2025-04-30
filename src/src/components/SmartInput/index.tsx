@@ -50,7 +50,7 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
             }
         }
         setCheckedValue(undefined);
-    }, [checked, type, value]);
+    }, [checked, checkedValue, type]);
 
     useImperativeHandle(ref, () => inputRef.current!, []);
 
