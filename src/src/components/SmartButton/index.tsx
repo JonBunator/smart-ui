@@ -1,8 +1,7 @@
 import React, {forwardRef, useCallback, useImperativeHandle, useRef} from "react";
 import {SmartComponent} from "../SmartComponent";
 import {SmartComponentElementProps, ValueType} from "../../utils/types.ts";
-import {extractTextFromNode} from '../../utils/helpers.ts'
-import {sleep} from "../../internal/common/utils.ts";
+import {extractTextFromNode, sleep} from '../../utils/helpers.ts'
 
 export type SmartButtonProps = React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & SmartComponentElementProps;
 
