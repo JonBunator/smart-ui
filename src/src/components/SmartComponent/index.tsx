@@ -26,11 +26,15 @@ export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
      * When true, the value is only updated after approval. Defaults to false.
      */
     updateAfterApproval?: boolean;
+    /**
+     * When true, the value will not be reset after suggested changes are denied.
+     */
+    noResetAfterDeny?: boolean;
     children?: ReactNode;
 }
 
 export function SmartComponent(props: SmartComponentProps) {
-    const { children, id, smartOnChange, onApprove, updateAfterApproval = false, ...smartProps } = props;
+    const { children, id, smartOnChange, onApprove, updateAfterApproval = false, noResetAfterDeny = false, ...smartProps } = props;
 
     const [changesSuggested, setChangesSuggested] = useState<boolean>(false);
     const previousValue = useRef<ValueType|undefined>(undefined);
@@ -50,14 +54,16 @@ export function SmartComponent(props: SmartComponentProps) {
     }, [smartOnChange, smartProps.value, updateAfterApproval]);
 
     const handleChangeApproval = useCallback((accept: boolean, value: ValueType) => {
-        if(!accept && !updateAfterApproval) {
-            smartOnChange?.(previousValue.current);
-        } else if(accept && updateAfterApproval) {
-            smartOnChange?.(value);
+        if(!noResetAfterDeny) {
+            if(!accept && !updateAfterApproval) {
+                smartOnChange?.(previousValue.current);
+            } else if(accept && updateAfterApproval) {
+                smartOnChange?.(value);
+            }
         }
         setChangesSuggested(false);
         onApprove?.(accept);
-    }, [onApprove, smartOnChange, updateAfterApproval]);
+    }, [onApprove, noResetAfterDeny, smartOnChange, updateAfterApproval]);
 
     useEffect(() => {
         addComponent(parentID, {...smartProps, id: componentId}, onChange, handleChangeApproval);
