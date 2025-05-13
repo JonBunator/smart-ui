@@ -48,8 +48,8 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const systemPrompt = getNextUIStatePrompt(state);
         console.log(systemPrompt, prompt)
 
-        //const updates: ValueUpdate[]  = await callAgent(systemPrompt, prompt);
-        const updates: ValueUpdate[]  = [
+        const updates: ValueUpdate[]  = await callAgent(systemPrompt, prompt);
+        /*const updates: ValueUpdate[]  = [
             {
                 "id": "name",
                 "value": "Jonas"
@@ -78,7 +78,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
                 "id": "smart-button",
                 "value": ""
             },
-        ];
+        ];*/
         console.log(updates);
         setApprovalRequired(true);
         await suggestValueChanges(updates);
