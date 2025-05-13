@@ -1,7 +1,7 @@
-import {AzureOpenAI} from "openai";
 import { z } from "zod";
 import {zodResponseFormat} from "openai/helpers/zod";
-import {ValueUpdate} from "../../utils/types.ts";
+import {ValueUpdate} from "../../utils/types";
+import OpenAI from "openai";
 
 const UIInteraction = z.object({
     id: z.string(),
@@ -12,15 +12,14 @@ const OutputSchema = z.object({
     interactions: z.array(UIInteraction),
 });
 
-
-export async function callAgent(client: AzureOpenAI, systemPrompt: string, userPrompt: string): Promise<ValueUpdate[]> {
+export async function callAgent(client: OpenAI, systemPrompt: string, userPrompt: string): Promise<ValueUpdate[]> {
     const model = "gpt-4o";
-    const response = await client.chat.completions.create({        model: model,
+    const response = await client.chat.completions.create({
+        model: model,
         messages: [
             { role:"system", content: systemPrompt },
             { role:"user", content: userPrompt }
         ],
-        max_tokens: 4096,
         temperature: 1,
         top_p: 1,
         response_format: zodResponseFormat(OutputSchema, "ui_interaction"),

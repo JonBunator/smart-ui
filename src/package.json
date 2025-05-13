@@ -41,7 +41,6 @@
     "vite-plugin-lib-inject-css": "^2.2.2"
   },
   "dependencies": {
-    "@azure/identity": "^4.9.0",
     "zod": "^3.24.3"
   }
 }
