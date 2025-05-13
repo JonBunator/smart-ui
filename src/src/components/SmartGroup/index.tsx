@@ -1,10 +1,9 @@
-import {SmartComponent, SmartComponentProps} from "../SmartComponent";
-
-export type SmartGroupProps = Omit<SmartComponentProps, 'smartOnChange'>
+import {SmartComponent} from "../SmartComponent";
+import {SmartComponentElementProps} from "../../utils/types.ts";
 
 /**
  * Used to group smart components together.
  */
-export function SmartGroup(props: SmartComponentProps) {
+export function SmartGroup(props: SmartComponentElementProps) {
     return <SmartComponent {...props}/>
 }
