@@ -1,11 +1,17 @@
-import React, {forwardRef, useCallback, useImperativeHandle, useRef, useState} from "react";
+import React, {forwardRef, ReactNode, useCallback, useImperativeHandle, useRef, useState} from "react";
 import { SmartComponent } from "../SmartComponent";
 import {SmartComponentElementProps, ValueType} from "../../utils/types.ts";
+import {extractTextFromNode} from "../../utils/helpers.ts";
 
-export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponentElementProps;
+export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & SmartComponentElementProps & {
+    /**
+     Label of the input.
+     */
+    label?: ReactNode
+};
 
 const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) => {
-    const { value, onChange, type, id, checked, className, smartSemantic, ...restProps } = props
+    const { value, onChange, type, id, checked, className, smartSemantic, label, ...restProps } = props
     const inputRef = useRef<HTMLInputElement>(null);
     const [checkedValue, setCheckedValue] = useState<ValueType|undefined>(undefined);
 
@@ -33,7 +39,7 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
             const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
                 window.HTMLInputElement.prototype,
                 "value")?.set;
-            nativeInputValueSetter?.call(inputRef.current, newValue);
+            nativeInputValueSetter?.call(inputRef.current, newValue ?? '');
 
             const event = new Event('input', { bubbles: true });
             inputRef.current.dispatchEvent(event);
@@ -57,7 +63,7 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
   return (
       <SmartComponent id={id}
                       value={type !== "button" ? value : undefined}
-                      label={type === "button" ? value?.toString() : undefined}
+                      label={type === "button" ? value?.toString() : extractTextFromNode(label)}
                       semantic={smartSemantic} type={type ?? "text" as string} smartOnChange={updateValue}
                       onApprove={handleApprove}>
           <input ref={inputRef} className={`${className} smart-component`} id={id} checked={checked} value={value} onChange={onChange} type={type} {...restProps}/>
