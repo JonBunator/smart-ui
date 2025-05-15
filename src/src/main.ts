@@ -1,5 +1,6 @@
 export { SmartButton } from './components/SmartButton'
 export { SmartInput } from './components/SmartInput'
+export { SmartTextarea } from './components/SmartTextarea'
 export { SmartSelect } from './components/SmartSelect'
 export { SmartComponent } from './components/SmartComponent'
 export { SmartGroup } from './components/SmartGroup'

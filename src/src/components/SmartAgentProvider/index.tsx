@@ -8,7 +8,7 @@ interface SmartAgentProviderContextType {
      * Sends a prompt to the AI agent.
      * @param message The message to send.
      */
-    sendPrompt: (prompt: string) => void;
+    sendPrompt: (prompt: string) => Promise<void>;
     /**
      * Accept or deny suggested changes of the AI agent.
      * @param accept Accepts the changes when true.
