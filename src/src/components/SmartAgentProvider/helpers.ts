@@ -1,20 +1,32 @@
 import {SmartComponentElement} from "../SmartComponentManager";
 
-type InteractionFunction = (value?: SmartComponentElement) => string | boolean | number;
+type InteractionFunction = (value: SmartComponentElement) => string | boolean | number;
 
 const typeInteractionPayload: Record<string, InteractionFunction> = {
     button: () => true,
-    radio: () => true,
-    number: () => 9,
     checkbox: () => true,
-    text: () => "some text",
-    textarea: () => "some text",
-    email: () => "mail@example.com",
-    select: (value?: SmartComponentElement) => value?.options !== undefined ? value.options[0].value : "",
+    color: () => "#ff0000",
     date: () => (new Date()).toISOString().split("T")[0],
+    ["datetime-local"]: () => (new Date()).toISOString().split(":").slice(0, 2).join(":"),
+    email: () => "mail@example.com",
+    month: () => (new Date()).toISOString().split("-").slice(0, 2).join("-"),
+    number: () => 9,
+    password: () => "passsword123",
+    radio: () => true,
+    range: () => 9,
+    reset: () => true,
+    search: () => "some text",
+    submit: () => true,
+    tel: (value: SmartComponentElement) => value.placeholder ?? "",
+    text: () => "some text",
+    time: () => "4:20",
+    url: () => "https://example.com",
+    week: () => (new Date()).toISOString().split("-")[0] + "-W10",
+    textarea: () => "some text",
+    select: (value: SmartComponentElement) => value.options !== undefined ? value.options[0].value : "",
 };
 
-const ignoredTypes = new Set<string>(["radio-group", "group"]);
+const ignoredTypes = new Set<string>(["radio-group", "group", "file", "hidden", "image"]);
 
 /**
  * Generates example interaction for the current ui state.

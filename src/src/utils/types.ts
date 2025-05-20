@@ -22,6 +22,14 @@ export interface SmartComponentValue {
      */
     options?: OptionType[];
     /**
+     * Pattern used for telephone input.
+     */
+    pattern?: string;
+    /**
+     * Placeholder for some input components.
+     */
+    placeholder?: string;
+    /**
      * Additional semantic descriptions.
      */
     semantic?: string;
