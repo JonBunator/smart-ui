@@ -16,7 +16,7 @@ export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
      * Callback that is invoked by AI agent. Changes value of component.
      * @param value The newly set value.
      */
-    smartOnChange?: (value: ValueType) => Promise<void>;
+    smartOnChange?: (value: ValueType) => Promise<boolean>;
     /**
      * Callback that is invoked by AI agent. Approves agent changes.
      * @param value The newly set value.
@@ -47,10 +47,12 @@ export function SmartComponent(props: SmartComponentProps) {
 
     const onChange = useCallback(async (value: ValueType) => {
         previousValue.current = smartProps.value;
-        if(!updateAfterApproval) {
-            smartOnChange?.(value);
+        let result = true;
+        if(!updateAfterApproval && smartOnChange) {
+            result = await smartOnChange?.(value);
         }
         setChangesSuggested(true);
+        return result;
     }, [smartOnChange, smartProps.value, updateAfterApproval]);
 
     const handleChangeApproval = useCallback((accept: boolean, value: ValueType) => {

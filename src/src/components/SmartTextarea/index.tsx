@@ -27,7 +27,9 @@ const SmartTextarea = forwardRef<HTMLTextAreaElement, SmartTextareaProps>((props
 
             const event = new Event('input', { bubbles: true });
             textareaRef.current.dispatchEvent(event);
+            return true;
         }
+        return false;
     }, []);
 
     useImperativeHandle(ref, () => textareaRef.current!, []);

@@ -24,7 +24,7 @@ interface SmartComponentContextType {
      * the changes where accepted. When false, the changes are denied and the previous value is set. value is the
      * newly set value.
      */
-    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<void>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => void;
+    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => void;
     /**
      * Removes the component from parent.
      * @param parentID The identifier of the parent this component belongs to.
@@ -56,7 +56,7 @@ interface SubscriptionProviderProps {
 type SmartComponentElementMap = Map<string, SmartComponentElementInternal>;
 type SmartComponentValueMap = Map<string, SmartComponentValue>;
 type ParentChildMap = Map<string, Set<string>>;
-type ElementOnChangeMap = Map<string, (value: ValueType) => Promise<void>>;
+type ElementOnChangeMap = Map<string, (value: ValueType) => Promise<boolean>>;
 type ElementOnChangeApprovalMap = Map<string, (accept: boolean, value: ValueType) => void>;
 
 export function SmartComponentManager(props: SubscriptionProviderProps) {
@@ -67,7 +67,7 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     const [elementOnChangeApprovalMapping, setElementOnChangeApprovalMapping] = useState<ElementOnChangeApprovalMap>(new Map());
     const suggestedValueChanges = useRef<ValueUpdate[]>([]);
 
-    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<void>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => {
+    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => {
         setElements(prev => {
             const newMap = new Map(prev);
             newMap.set(value.id, value);

@@ -23,14 +23,14 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
         if (inputRef.current) {
             if(type === "button") {
                 inputRef.current.click();
-                return;
+                return true;
             }
 
             if(type === "checkbox") {
                 if(checked !== newValue) {
                     inputRef.current.click();
                 }
-                return
+                return true;
             }
 
             if(type === "radio") {
@@ -43,7 +43,9 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
 
             const event = new Event('input', { bubbles: true });
             inputRef.current.dispatchEvent(event);
+            return true;
         }
+        return false;
     }, [checked, type]);
 
     /**

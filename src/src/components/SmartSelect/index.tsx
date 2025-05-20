@@ -35,7 +35,9 @@ const SmartSelect = forwardRef<HTMLSelectElement, SmartSelectProps>((props, ref)
 
             const event = new Event('change', { bubbles: true });
             selectRef.current.dispatchEvent(event);
+            return true;
         }
+        return false;
     }, []);
 
     useImperativeHandle(ref, () => selectRef.current!, []);

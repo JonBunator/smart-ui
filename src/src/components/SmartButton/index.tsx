@@ -11,11 +11,13 @@ const SmartButton = forwardRef<HTMLButtonElement, SmartButtonProps>((props, ref)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const clickButton = useCallback(async (_unusedValue: ValueType) => {
-        // Sleep before clicking on button to wait for state update.
-        await sleep(1000);
         if (buttonRef.current) {
+            // Sleep before clicking on button to wait for state update.
+            await sleep(1000);
             buttonRef.current.click();
+            return true;
         }
+        return false;
     }, []);
 
     useImperativeHandle(ref, () => buttonRef.current!, []);
