@@ -111,8 +111,12 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         console.log(response.uiInteractions);
         console.log(response.naturalLanguageInteraction);
 
-        await suggestValueChanges(response.uiInteractions);
-        setApprovalRequired(response.uiInteractions.length > 0 || approvalRequired);
+        const changedDetected = await suggestValueChanges(response.uiInteractions);
+        if(changedDetected) {
+            setApprovalRequired(response.uiInteractions.length > 0 || approvalRequired);
+        } else {
+            setApprovalRequired(false);
+        }
         setChatHistory((prev) => [...prev, {
             creator: ChatMessageCreator.AGENT,
             message: JSON.stringify(response),

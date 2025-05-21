@@ -150,15 +150,16 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
             .filter(result => result !== null);
     }, [elements, parentChildrenMapping]);
 
-    const changeValue = useCallback(async (update: ValueUpdate): Promise<void> => {
+    const changeValue = useCallback(async (update: ValueUpdate): Promise<boolean> => {
         const onChangeFunction = elementOnChangeMapping.get(update.id);
         const value = elements.get(update.id);
 
         if (value && onChangeFunction) {
-            await onChangeFunction(update.value);
+            return await onChangeFunction(update.value);
         } else {
             console.warn(`No component found with identifier: ${update.id}`);
         }
+        return true;
     }, [elementOnChangeMapping, elements]);
 
     const handleChangeApproval = useCallback(async (accept: boolean): Promise<boolean> => {
@@ -200,11 +201,13 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
 
     const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<boolean> => {
         await undoPreviousSuggestedChanges(updates);
+        const updateSuccessful = new Set<boolean>();
         for(const update of updates) {
             suggestedValueChangesMapping.current.set(update.id, update);
-            await changeValue(update);
+            const result = await changeValue(update);
+            updateSuccessful.add(result);
         }
-        return true;
+        return !updateSuccessful.has(false);
     }, [changeValue, undoPreviousSuggestedChanges]);
 
     const value = useMemo(() => ({
