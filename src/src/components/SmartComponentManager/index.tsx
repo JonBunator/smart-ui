@@ -24,7 +24,7 @@ interface SmartComponentContextType {
      * the changes where accepted. When false, the changes are denied and the previous value is set. value is the
      * newly set value.
      */
-    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => void;
+    addComponent: (parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => Promise<boolean>) => void;
     /**
      * Removes the component from parent.
      * @param parentID The identifier of the parent this component belongs to.
@@ -39,12 +39,12 @@ interface SmartComponentContextType {
      * Suggests value change for components.
      * @param updates The ids of the components and values to be updated.
      */
-    suggestValueChanges: (updates: ValueUpdate[]) => Promise<void>;
+    suggestValueChanges: (updates: ValueUpdate[]) => Promise<boolean>;
     /**
      * Accept or deny suggested changes.
      * @param accept Accepts the changes when true, clears them when false.
      */
-    handleChangeApproval: (accept: boolean) => void;
+    handleChangeApproval: (accept: boolean) => Promise<boolean>;
 }
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
@@ -57,7 +57,8 @@ type SmartComponentElementMap = Map<string, SmartComponentElementInternal>;
 type SmartComponentValueMap = Map<string, SmartComponentValue>;
 type ParentChildMap = Map<string, Set<string>>;
 type ElementOnChangeMap = Map<string, (value: ValueType) => Promise<boolean>>;
-type ElementOnChangeApprovalMap = Map<string, (accept: boolean, value: ValueType) => void>;
+type ElementOnChangeApprovalMap = Map<string, (accept: boolean, value: ValueType) => Promise<boolean>>;
+type SuggestedValueChangesMap = Map<string, ValueUpdate>;
 
 export function SmartComponentManager(props: SubscriptionProviderProps) {
     const {children} = props;
@@ -65,9 +66,9 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     const [parentChildrenMapping, setParentChildrenMapping] = useState<ParentChildMap>(new Map());
     const [elementOnChangeMapping, setElementOnChangeMapping] = useState<ElementOnChangeMap>(new Map());
     const [elementOnChangeApprovalMapping, setElementOnChangeApprovalMapping] = useState<ElementOnChangeApprovalMap>(new Map());
-    const suggestedValueChanges = useRef<ValueUpdate[]>([]);
+    const suggestedValueChangesMapping = useRef<SuggestedValueChangesMap>(new Map());
 
-    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => void) => {
+    const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => Promise<boolean>) => {
         setElements(prev => {
             const newMap = new Map(prev);
             newMap.set(value.id, value);
@@ -160,25 +161,51 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         }
     }, [elementOnChangeMapping, elements]);
 
-    const handleChangeApproval = useCallback((accept: boolean): void => {
-        for(const valueChange of suggestedValueChanges.current) {
+    const handleChangeApproval = useCallback(async (accept: boolean): Promise<boolean> => {
+        for(const valueChange of suggestedValueChangesMapping.current.values()) {
             const componentID = valueChange.id;
             const changeApproval = elementOnChangeApprovalMapping.get(componentID);
             if(changeApproval) {
-                changeApproval(accept, valueChange.value);
+                await changeApproval(accept, valueChange.value);
             } else {
                 console.warn(`No component found with identifier: ${componentID}`);
             }
         }
-        
+        suggestedValueChangesMapping.current = new Map();
+        return true;
     }, [elementOnChangeApprovalMapping]);
 
-    const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<void> => {
-        suggestedValueChanges.current = updates;
+    /**
+     * Undos previous suggested changes for elements that are not included in new update.
+     * @param updates New updates.
+     */
+    const undoPreviousSuggestedChanges= useCallback(async (updates: ValueUpdate[]) =>  {
+        const updateIds = new Set(updates.map(update => update.id));
+        const updatesToRemove: ValueUpdate[] = [];
+        suggestedValueChangesMapping.current.forEach((value, id) => {
+            if(!updateIds.has(id)) {
+                updatesToRemove.push(value);
+            }
+        })
+
+        for(const update of updatesToRemove) {
+            const changeApproval = elementOnChangeApprovalMapping.get(update.id);
+            const oldValue = suggestedValueChangesMapping.current.get(update.id);
+            if(changeApproval && oldValue) {
+                await changeApproval(false, oldValue.value);
+            }
+            suggestedValueChangesMapping.current.delete(update.id);
+        }
+    }, [elementOnChangeApprovalMapping]);
+
+    const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<boolean> => {
+        await undoPreviousSuggestedChanges(updates);
         for(const update of updates) {
+            suggestedValueChangesMapping.current.set(update.id, update);
             await changeValue(update);
         }
-    }, [changeValue]);
+        return true;
+    }, [changeValue, undoPreviousSuggestedChanges]);
 
     const value = useMemo(() => ({
         addComponent: addComponent,

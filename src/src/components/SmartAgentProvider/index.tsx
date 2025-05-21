@@ -1,7 +1,9 @@
-import {createContext, useContext, ReactNode, useMemo, useCallback, useState} from 'react';
-import {getNextUIStatePrompt} from "./agentPrompts.ts";
-import {ValueUpdate} from "../../utils/types.ts";
+import {createContext, ReactNode, useCallback, useContext, useMemo, useState} from 'react';
+import {getInstructionPrompt, getNextUIStatePrompt} from "./agentPrompts.ts";
 import {useSmartComponentManager} from "../SmartComponentManager";
+import {AgentResponse} from "./openAI.ts";
+import {ChatMessage, ChatMessageCreator} from "../../utils/types.ts";
+import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
 
 interface SmartAgentProviderContextType {
     /**
@@ -13,11 +15,12 @@ interface SmartAgentProviderContextType {
      * Accept or deny suggested changes of the AI agent.
      * @param accept Accepts the changes when true.
      */
-    handleChangeApproval: (accept: boolean) => void;
+    handleChangeApproval: (accept: boolean) => Promise<void>;
     /**
      * When true, an approval by the user is required.
      */
     approvalRequired: boolean;
+    chatHistory: ChatMessage[];
 }
 
 const SmartAgentProviderContext = createContext<SmartAgentProviderContextType | undefined>(undefined);
@@ -25,11 +28,9 @@ const SmartAgentProviderContext = createContext<SmartAgentProviderContextType | 
 export interface SmartAgentProviderProps {
     /**
      * Callback used to send prompts to the AI agent.
-     * @param systemPrompt The system prompt of the agent. Used for system instructions.
-     * @param prompt The user specified prompt.
+     * @param messages Messages sent to the AI agent.
      */
-    callAgent: (systemPrompt: string, prompt: string) => Promise<ValueUpdate[]>;
-
+    callAgent: (messages: ChatCompletionMessageParam[]) => Promise<AgentResponse>;
     /**
      * Children nodes.
      */
@@ -42,13 +43,41 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
     const [approvalRequired, setApprovalRequired] = useState(false);
+    const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
 
     const sendPrompt = useCallback(async (prompt: string): Promise<void> => {
         const state = getHierarchy();
-        const systemPrompt = getNextUIStatePrompt(state);
-        console.log(systemPrompt, prompt)
+        const uiStatePrompt = getNextUIStatePrompt(state);
 
-        const updates: ValueUpdate[]  = await callAgent(systemPrompt, prompt);
+        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-5).map((chatMessage) => ( {
+            role: chatMessage.creator,
+            content: chatMessage.message,
+        }));
+        messages.push({
+            role: ChatMessageCreator.SYSTEM,
+            content: uiStatePrompt,
+        })
+        messages.push({
+            role: ChatMessageCreator.USER,
+            content: prompt,
+        })
+        messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: getInstructionPrompt()})
+
+        setChatHistory((prev) => [...prev,
+            {
+                creator: ChatMessageCreator.SYSTEM,
+                message: uiStatePrompt,
+                sentTime: new Date()
+            },
+            {
+                creator: ChatMessageCreator.USER,
+                message: prompt,
+                sentTime: new Date()
+            },
+            ]
+        )
+
+        const response: AgentResponse  = await callAgent(messages);
         /*const updates: ValueUpdate[]  = [
             {
                 "id": "name",
@@ -79,13 +108,20 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
                 "value": ""
             },
         ];*/
-        console.log(updates);
-        setApprovalRequired(true);
-        await suggestValueChanges(updates);
-    }, [callAgent, suggestValueChanges, getHierarchy]);
+        console.log(response.uiInteractions);
+        console.log(response.naturalLanguageInteraction);
 
-    const changeApproval = useCallback((accept: boolean): void => {
-        handleChangeApproval(accept);
+        await suggestValueChanges(response.uiInteractions);
+        setApprovalRequired(response.uiInteractions.length > 0 || approvalRequired);
+        setChatHistory((prev) => [...prev, {
+            creator: ChatMessageCreator.AGENT,
+            message: JSON.stringify(response),
+            sentTime: new Date()}]
+        )
+    }, [getHierarchy, chatHistory, callAgent, suggestValueChanges, approvalRequired]);
+
+    const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
+        await handleChangeApproval(accept);
         setApprovalRequired(false);
     }, [handleChangeApproval]);
 
@@ -93,7 +129,8 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         sendPrompt: sendPrompt,
         handleChangeApproval: changeApproval,
         approvalRequired: approvalRequired,
-    }), [approvalRequired, changeApproval, sendPrompt]);
+        chatHistory: chatHistory,
+    }), [approvalRequired, changeApproval, sendPrompt, chatHistory]);
 
 
     return (

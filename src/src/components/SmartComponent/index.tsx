@@ -37,7 +37,7 @@ export function SmartComponent(props: SmartComponentProps) {
     const { children, id, smartOnChange, onApprove, updateAfterApproval = false, noResetAfterDeny = false, ...smartProps } = props;
 
     const [changesSuggested, setChangesSuggested] = useState<boolean>(false);
-    const previousValue = useRef<ValueType|undefined>(undefined);
+    const initialValue = useRef<ValueType|undefined>(undefined);
 
     const { parentID } = useSmartComponentParent();
     const { addComponent, removeComponent } = useSmartComponentManager();
@@ -46,25 +46,41 @@ export function SmartComponent(props: SmartComponentProps) {
 
 
     const onChange = useCallback(async (value: ValueType) => {
-        previousValue.current = smartProps.value;
+        // Only set initial value on first onChange call, must be reset via handleChangeApproval
+        if(initialValue.current === undefined) {
+            initialValue.current = smartProps.value;
+        }
+
+        if(value === smartProps.value) {
+            return false;
+        }
+
         let result = true;
         if(!updateAfterApproval && smartOnChange) {
             result = await smartOnChange?.(value);
+        }
+        // Changes suggestion should not be shown when reverted to initial value
+        if(initialValue.current !== undefined && value === initialValue.current) {
+            setChangesSuggested(false);
+            return false;
         }
         setChangesSuggested(true);
         return result;
     }, [smartOnChange, smartProps.value, updateAfterApproval]);
 
-    const handleChangeApproval = useCallback((accept: boolean, value: ValueType) => {
+    const handleChangeApproval = useCallback(async (accept: boolean, value: ValueType) => {
+        let result = true;
         if(!noResetAfterDeny) {
             if(!accept && !updateAfterApproval) {
-                smartOnChange?.(previousValue.current);
+                result = await smartOnChange?.(initialValue.current) ?? true;
             } else if(accept && updateAfterApproval) {
-                smartOnChange?.(value);
+                result = await smartOnChange?.(value) ?? true;
             }
         }
         setChangesSuggested(false);
         onApprove?.(accept);
+        initialValue.current = undefined;
+        return result;
     }, [onApprove, noResetAfterDeny, smartOnChange, updateAfterApproval]);
 
     useEffect(() => {

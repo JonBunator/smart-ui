@@ -34,7 +34,6 @@ const ignoredTypes = new Set<string>(["radio-group", "group", "file", "hidden", 
  */
 export function getUIInteractionExamples(uiState: SmartComponentElement[]) {
     const elements: SmartComponentElement[] = _getElementsForTypes(uiState);
-    console.log(elements);
     const exampleInteractions = [];
     for (const element of elements) {
         if(element.type === undefined) {

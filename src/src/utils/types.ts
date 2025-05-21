@@ -81,3 +81,30 @@ export interface SmartComponentElementProps {
      */
     children?: ReactNode;
 }
+
+/**
+ * Creator of a chat message.
+ */
+export enum ChatMessageCreator {
+    AGENT = 'assistant',
+    USER = 'user',
+    SYSTEM = 'system',
+}
+
+/**
+ * User or agent chat message.
+ */
+export interface ChatMessage {
+    /**
+     * Creator of the message
+     */
+    creator: ChatMessageCreator
+    /**
+     * Chat message
+     */
+    message: string
+    /**
+     * Time the message was sent
+     */
+    sentTime: Date
+}
