@@ -159,7 +159,7 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         } else {
             console.warn(`No component found with identifier: ${update.id}`);
         }
-        return true;
+        return false;
     }, [elementOnChangeMapping, elements]);
 
     const handleChangeApproval = useCallback(async (accept: boolean): Promise<boolean> => {
@@ -207,7 +207,7 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
             const result = await changeValue(update);
             updateSuccessful.add(result);
         }
-        return !updateSuccessful.has(false);
+        return updateSuccessful.has(true);
     }, [changeValue, undoPreviousSuggestedChanges]);
 
     const value = useMemo(() => ({
