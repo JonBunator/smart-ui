@@ -32,13 +32,18 @@ export interface SmartAgentProviderProps {
      */
     callAgent: (messages: ChatCompletionMessageParam[]) => Promise<AgentResponse>;
     /**
+     * Indicates how many messages the AI knows about. A higher number results in a higher number of tokens.
+     * Must be greater than 0. Default value is 5.
+     */
+    chatHistoryMemory?: number;
+    /**
      * Children nodes.
      */
     children: ReactNode;
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {callAgent, children} = props;
+    const {callAgent, chatHistoryMemory = 5, children} = props;
 
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
@@ -49,7 +54,12 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const state = getHierarchy();
         const uiStatePrompt = getNextUIStatePrompt(state);
 
-        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-5).map((chatMessage) => ( {
+        if(chatHistoryMemory < 1) {
+            console.error(`Configuration error: chatHistoryMemory has value of ${chatHistoryMemory} and must be greater than 0!`);
+            return;
+        }
+
+        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-chatHistoryMemory).map((chatMessage) => ( {
             role: chatMessage.creator,
             content: chatMessage.message,
         }));
