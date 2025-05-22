@@ -152,15 +152,14 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
 
     const changeValue = useCallback(async (update: ValueUpdate): Promise<boolean> => {
         const onChangeFunction = elementOnChangeMapping.get(update.id);
-        const value = elements.get(update.id);
 
-        if (value && onChangeFunction) {
+        if (onChangeFunction) {
             return await onChangeFunction(update.value);
         } else {
             console.warn(`No component found with identifier: ${update.id}`);
         }
         return false;
-    }, [elementOnChangeMapping, elements]);
+    }, [elementOnChangeMapping]);
 
     const handleChangeApproval = useCallback(async (accept: boolean): Promise<boolean> => {
         for(const valueChange of suggestedValueChangesMapping.current.values()) {
@@ -176,39 +175,18 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         return true;
     }, [elementOnChangeApprovalMapping]);
 
-    /**
-     * Undos previous suggested changes for elements that are not included in new update.
-     * @param updates New updates.
-     */
-    const undoPreviousSuggestedChanges= useCallback(async (updates: ValueUpdate[]) =>  {
-        const updateIds = new Set(updates.map(update => update.id));
-        const updatesToRemove: ValueUpdate[] = [];
-        suggestedValueChangesMapping.current.forEach((value, id) => {
-            if(!updateIds.has(id)) {
-                updatesToRemove.push(value);
-            }
-        })
-
-        for(const update of updatesToRemove) {
-            const changeApproval = elementOnChangeApprovalMapping.get(update.id);
-            const oldValue = suggestedValueChangesMapping.current.get(update.id);
-            if(changeApproval && oldValue) {
-                await changeApproval(false, oldValue.value);
-            }
-            suggestedValueChangesMapping.current.delete(update.id);
-        }
-    }, [elementOnChangeApprovalMapping]);
-
     const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<boolean> => {
-        await undoPreviousSuggestedChanges(updates);
-        const updateSuccessful = new Set<boolean>();
         for(const update of updates) {
-            suggestedValueChangesMapping.current.set(update.id, update);
-            const result = await changeValue(update);
-            updateSuccessful.add(result);
+            if(suggestedValueChangesMapping.current.has(update.id)) {
+                suggestedValueChangesMapping.current.delete(update.id);
+            }
+            const successful = await changeValue(update);
+            if(successful) {
+                suggestedValueChangesMapping.current.set(update.id, update);
+            }
         }
-        return updateSuccessful.has(true);
-    }, [changeValue, undoPreviousSuggestedChanges]);
+        return suggestedValueChangesMapping.current.size !== 0;
+    }, [changeValue]);
 
     const value = useMemo(() => ({
         addComponent: addComponent,
