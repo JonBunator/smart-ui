@@ -1,9 +1,10 @@
-import {createContext, ReactNode, useCallback, useContext, useMemo, useState} from 'react';
+import {createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import {getInstructionPrompt, getNextUIStatePrompt} from "./agentPrompts.ts";
 import {useSmartComponentManager} from "../SmartComponentManager";
 import {AgentResponse} from "./openAI.ts";
 import {ChatMessage, ChatMessageCreator} from "../../utils/types.ts";
 import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
+import {loadChatHistoryFromSessionStorage, saveChatHistoryToSessionStorage} from "../../internal/sessionStorage.ts";
 
 interface SmartAgentProviderContextType {
     /**
@@ -16,6 +17,10 @@ interface SmartAgentProviderContextType {
      * @param accept Accepts the changes when true.
      */
     handleChangeApproval: (accept: boolean) => Promise<void>;
+    /**
+     * Deletes the chat history with the agent.
+     */
+    deleteChatHistory: () => void;
     /**
      * When true, an approval by the user is required.
      */
@@ -50,6 +55,15 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
     const [approvalRequired, setApprovalRequired] = useState(false);
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
 
+    useEffect(() => {
+        setChatHistory(loadChatHistoryFromSessionStorage());
+    }, []);
+
+    useEffect(() => {
+        saveChatHistoryToSessionStorage(chatHistory);
+    }, [chatHistory]);
+
+
     const sendPrompt = useCallback(async (prompt: string): Promise<void> => {
         const state = getHierarchy();
         const uiStatePrompt = getNextUIStatePrompt(state);
@@ -77,12 +91,12 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             {
                 creator: ChatMessageCreator.SYSTEM,
                 message: uiStatePrompt,
-                sentTime: new Date()
+                sentTime: (new Date()).toUTCString()
             },
             {
                 creator: ChatMessageCreator.USER,
                 message: prompt,
-                sentTime: new Date()
+                sentTime: (new Date()).toUTCString()
             },
             ]
         )
@@ -130,21 +144,26 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         setChatHistory((prev) => [...prev, {
             creator: ChatMessageCreator.AGENT,
             message: JSON.stringify(response),
-            sentTime: new Date()}]
+            sentTime: (new Date()).toUTCString()}]
         )
-    }, [getHierarchy, chatHistory, callAgent, suggestValueChanges, approvalRequired]);
+    }, [getHierarchy, chatHistoryMemory, chatHistory, suggestValueChanges, approvalRequired]);
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
         await handleChangeApproval(accept);
         setApprovalRequired(false);
     }, [handleChangeApproval]);
 
+    const deleteChatHistory = useCallback(() => {
+        setChatHistory([]);
+    }, []);
+
     const value = useMemo(() => ({
         sendPrompt: sendPrompt,
         handleChangeApproval: changeApproval,
+        deleteChatHistory: deleteChatHistory,
         approvalRequired: approvalRequired,
         chatHistory: chatHistory,
-    }), [approvalRequired, changeApproval, sendPrompt, chatHistory]);
+    }), [sendPrompt, changeApproval, deleteChatHistory, approvalRequired, chatHistory]);
 
 
     return (

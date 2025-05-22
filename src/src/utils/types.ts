@@ -104,7 +104,7 @@ export interface ChatMessage {
      */
     message: string
     /**
-     * Time the message was sent
+     * Time the message was sent. In RFC 1123 date format.
      */
-    sentTime: Date
+    sentTime: string
 }
