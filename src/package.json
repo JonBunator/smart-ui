@@ -6,6 +6,11 @@
   "type": "module",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
+  "exports": {
+    ".": "./dist/main.js",
+    "./server": "./dist/server.js",
+    "./types": "./dist/types.js"
+  },
   "files": [
     "dist"
   ],

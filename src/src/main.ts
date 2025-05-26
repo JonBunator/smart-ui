@@ -5,8 +5,5 @@ export { SmartSelect } from './components/SmartSelect'
 export { SmartComponent } from './components/SmartComponent'
 export { SmartGroup } from './components/SmartGroup'
 export { SmartAgentProvider, useSmartAgent } from './components/SmartAgentProvider'
-export {callAgent} from "./components/SmartAgentProvider/openAI"
-export type { AgentResponse } from "./components/SmartAgentProvider/openAI"
 export { SmartComponentManager, useSmartComponentManager } from './components/SmartComponentManager'
-export * from './utils/types'
 export * from './utils/helpers'

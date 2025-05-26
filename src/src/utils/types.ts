@@ -108,3 +108,14 @@ export interface ChatMessage {
      */
     sentTime: string
 }
+
+export interface AgentResponse {
+    /**
+     * List of ui interactions that should be executed
+     */
+    uiInteractions: ValueUpdate[]
+    /**
+     * Interaction with the user in natural language
+     */
+    naturalLanguageInteraction: string
+}
