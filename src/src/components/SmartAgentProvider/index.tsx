@@ -9,9 +9,11 @@ import {AgentResponse} from "../../utils/types";
 interface SmartAgentProviderContextType {
     /**
      * Sends a prompt to the AI agent.
-     * @param message The message to send.
+     * @param prompt The message to send.
+     * @param chatHistoryMemory Indicates how many messages the AI knows about. A higher number results in a higher
+     * number of tokens. Must be greater than 0. When undefined, the default value is used.
      */
-    sendPrompt: (prompt: string) => Promise<void>;
+    sendPrompt: (prompt: string, chatHistoryMemory?: number) => Promise<void>;
     /**
      * Accept or deny suggested changes of the AI agent.
      * @param accept Accepts the changes when true.
@@ -40,7 +42,7 @@ export interface SmartAgentProviderProps {
      * Indicates how many messages the AI knows about. A higher number results in a higher number of tokens.
      * Must be greater than 0. Default value is 5.
      */
-    chatHistoryMemory?: number;
+    defaultChatHistoryMemory?: number;
     /**
      * Children nodes.
      */
@@ -48,7 +50,7 @@ export interface SmartAgentProviderProps {
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {callAgent, chatHistoryMemory = 5, children} = props;
+    const {callAgent, defaultChatHistoryMemory = 5, children} = props;
 
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
@@ -64,16 +66,21 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
     }, [chatHistory]);
 
 
-    const sendPrompt = useCallback(async (prompt: string): Promise<void> => {
+    const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
         const state = getHierarchy();
         const uiStatePrompt = getNextUIStatePrompt(state);
 
-        if(chatHistoryMemory < 1) {
+        if(defaultChatHistoryMemory < 1) {
+            console.error(`Configuration error: defaultChatHistoryMemory has value of ${defaultChatHistoryMemory} and must be greater than 0!`);
+            return;
+        } else if(chatHistoryMemory && chatHistoryMemory < 1) {
             console.error(`Configuration error: chatHistoryMemory has value of ${chatHistoryMemory} and must be greater than 0!`);
             return;
         }
 
-        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-chatHistoryMemory).map((chatMessage) => ( {
+        const memory = chatHistoryMemory ?? defaultChatHistoryMemory;
+
+        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map((chatMessage) => ( {
             role: chatMessage.creator,
             content: chatMessage.message,
         }));
@@ -146,7 +153,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             message: JSON.stringify(response),
             sentTime: (new Date()).toUTCString()}]
         )
-    }, [getHierarchy, chatHistoryMemory, chatHistory, suggestValueChanges, approvalRequired]);
+    }, [getHierarchy, defaultChatHistoryMemory, chatHistory, callAgent, suggestValueChanges, approvalRequired]);
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
         await handleChangeApproval(accept);
