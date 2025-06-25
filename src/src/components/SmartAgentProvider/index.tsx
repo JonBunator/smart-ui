@@ -27,7 +27,14 @@ interface SmartAgentProviderContextType {
      * When true, an approval by the user is required.
      */
     approvalRequired: boolean;
+    /**
+     * Chat history between user and agent.
+     */
     chatHistory: ChatMessage[];
+    /**
+     * Loading is true when user waits for agent response.
+     */
+    loading: boolean;
 }
 
 const SmartAgentProviderContext = createContext<SmartAgentProviderContextType | undefined>(undefined);
@@ -55,6 +62,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
     const [approvalRequired, setApprovalRequired] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
 
     useEffect(() => {
@@ -67,6 +75,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
 
     const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
+        setLoading(true);
         const state = getHierarchy();
         const uiStatePrompt = getNextUIStatePrompt(state);
 
@@ -153,6 +162,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             message: JSON.stringify(response),
             sentTime: (new Date()).toUTCString()}]
         )
+        setLoading(false);
     }, [getHierarchy, defaultChatHistoryMemory, chatHistory, callAgent, suggestValueChanges, approvalRequired]);
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
@@ -170,7 +180,8 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         deleteChatHistory: deleteChatHistory,
         approvalRequired: approvalRequired,
         chatHistory: chatHistory,
-    }), [sendPrompt, changeApproval, deleteChatHistory, approvalRequired, chatHistory]);
+        loading,
+    }), [sendPrompt, changeApproval, deleteChatHistory, approvalRequired, chatHistory, loading]);
 
 
     return (
