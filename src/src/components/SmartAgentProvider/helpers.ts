@@ -28,12 +28,26 @@ const typeInteractionPayload: Record<string, InteractionFunction> = {
 
 const ignoredTypes = new Set<string>(["radio-group", "group", "file", "hidden", "image"]);
 
+
 /**
- * Generates example interaction for the current ui state.
- * @param uiState The current UI state.
+ * Gets ids of elements in current UI state.
+ * @param uiStateFlat The current flattened UI state.
  */
-export function getUIInteractionExamples(uiState: SmartComponentElement[]) {
-    const elements: SmartComponentElement[] = _getElementsForTypes(uiState);
+export function getUIElementIDs(uiStateFlat: SmartComponentElement[]) {
+    return uiStateFlat.map((uiState) => uiState.id);
+}
+
+export interface UIInteractionExample {
+    id: string
+    value: string | boolean | number
+}
+
+/**
+ * Generates example interaction for the current UI state.
+ * @param uiStateFlat The current flattened UI state.
+ */
+export function getUIInteractionExamples(uiStateFlat: SmartComponentElement[]): UIInteractionExample[] {
+    const elements: SmartComponentElement[] = _getElementsForTypes(uiStateFlat);
     const exampleInteractions = [];
     for (const element of elements) {
         if(element.type === undefined) {
@@ -51,18 +65,32 @@ export function getUIInteractionExamples(uiState: SmartComponentElement[]) {
 
 /**
  * Gets for each unique type an element in the UI tree.
- * @param uiState The current UI state.
+ * @param uiStateFlat The current flattened UI state.
  */
-function _getElementsForTypes(uiState: SmartComponentElement[]): SmartComponentElement[] {
+function _getElementsForTypes(uiStateFlat: SmartComponentElement[]): SmartComponentElement[] {
     const result: SmartComponentElement[] = [];
     const types: Set<string> = new Set();
 
+    for (const element of uiStateFlat) {
+        if (element.type && !types.has(element.type)) {
+            types.add(element.type);
+            result.push(element);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Flattens the UI state tree into a single list of elements.
+ * @param uiState The current UI state.
+ */
+export function flattenUIState(uiState: SmartComponentElement[]): SmartComponentElement[] {
+    const result: SmartComponentElement[] = [];
+
     function traverse(elements: SmartComponentElement[]) {
         for (const element of elements) {
-            if (element.type && !types.has(element.type)) {
-                types.add(element.type);
-                result.push(element);
-            }
+            result.push(element);
             if (element.children) {
                 traverse(element.children);
             }

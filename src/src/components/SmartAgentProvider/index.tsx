@@ -1,10 +1,11 @@
 import {createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import {getInstructionPrompt, getNextUIStatePrompt} from "./agentPrompts.ts";
 import {useSmartComponentManager} from "../SmartComponentManager";
-import {ChatMessage, ChatMessageCreator} from "../../utils/types.ts";
+import {AgentInput, ChatMessage, ChatMessageCreator} from "../../utils/types.ts";
 import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
 import {loadChatHistoryFromSessionStorage, saveChatHistoryToSessionStorage} from "../../internal/sessionStorage.ts";
 import {AgentResponse} from "../../utils/types";
+import {flattenUIState, getUIElementIDs, getUIInteractionExamples} from "./helpers.ts";
 
 interface SmartAgentProviderContextType {
     /**
@@ -42,9 +43,9 @@ const SmartAgentProviderContext = createContext<SmartAgentProviderContextType | 
 export interface SmartAgentProviderProps {
     /**
      * Callback used to send prompts to the AI agent.
-     * @param messages Messages sent to the AI agent.
+     * @param agentInput Input to the AI agent.
      */
-    callAgent: (messages: ChatCompletionMessageParam[]) => Promise<AgentResponse>;
+    callAgent: (agentInput: AgentInput) => Promise<AgentResponse>;
     /**
      * Indicates how many messages the AI knows about. A higher number results in a higher number of tokens.
      * Must be greater than 0. Default value is 5.
@@ -75,10 +76,6 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
 
     const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
-        setLoading(true);
-        const state = getHierarchy();
-        const uiStatePrompt = getNextUIStatePrompt(state);
-
         if(defaultChatHistoryMemory < 1) {
             console.error(`Configuration error: defaultChatHistoryMemory has value of ${defaultChatHistoryMemory} and must be greater than 0!`);
             return;
@@ -86,7 +83,13 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             console.error(`Configuration error: chatHistoryMemory has value of ${chatHistoryMemory} and must be greater than 0!`);
             return;
         }
+        setLoading(true);
 
+        const state = getHierarchy();
+        const uiStateFlat = flattenUIState(state);
+        const uiInteractionExamples = getUIInteractionExamples(uiStateFlat);
+        const uiElementIds = getUIElementIDs(uiStateFlat);
+        const uiStatePrompt = getNextUIStatePrompt(state, uiInteractionExamples);
         const memory = chatHistoryMemory ?? defaultChatHistoryMemory;
 
         const messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map((chatMessage) => ( {
@@ -117,7 +120,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             ]
         )
 
-        const response: AgentResponse  = await callAgent(messages);
+        const response: AgentResponse  = await callAgent({messages: messages, uiElementIds: uiElementIds});
         /*const updates: ValueUpdate[]  = [
             {
                 "id": "name",

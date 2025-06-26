@@ -1,27 +1,31 @@
 import { z } from "zod";
 import {zodResponseFormat} from "openai/helpers/zod";
 import OpenAI from "openai";
-import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
-import {AgentResponse} from "../utils/types.ts";
+import {AgentInput, AgentResponse} from "../utils/types.ts";
 
-const UIInteraction = z.object({
-    id: z.string().describe("Id of the ui element"),
-    value: z.union([z.string(), z.boolean(), z.number(), z.array(z.string())]).describe("New value of the ui element")
-});
+function createOutputSchema(idTypes: string[]) {
+    const UIInteraction = z.object({
+        id: z.enum(idTypes as [string, ...string[]]).describe("Id of the UI element"),
+        value: z.union([z.string(), z.boolean(), z.number(), z.array(z.string())]).describe("New value of the UI element")
+    });
 
-const OutputSchema = z.object({
-    uiInteractions: z.array(UIInteraction).describe("List of ui interactions that should be executed"),
-    naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language"),
-});
+    const OutputSchema = z.object({
+        uiInteractions: z.array(UIInteraction).describe("List of UI interactions that should be executed"),
+        naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language"),
+    });
+    return  zodResponseFormat(OutputSchema, "ui_interaction");
+}
 
-export async function callAgent(client: OpenAI, messages: ChatCompletionMessageParam[]): Promise<AgentResponse> {
+
+export async function callAgent(client: OpenAI, agentInput: AgentInput): Promise<AgentResponse> {
+
     const model = "gpt-4o";
     const response = await client.chat.completions.create({
         model: model,
-        messages: messages,
+        messages: agentInput.messages,
         temperature: 1,
         top_p: 1,
-        response_format: zodResponseFormat(OutputSchema, "ui_interaction"),
+        response_format: createOutputSchema(agentInput.uiElementIds),
     });
     const message = response.choices[0].message;
     if(message.refusal) {

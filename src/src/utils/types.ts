@@ -1,4 +1,5 @@
 import {ReactNode} from "react";
+import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
 
 export interface SmartComponentValue {
     /**
@@ -118,4 +119,15 @@ export interface AgentResponse {
      * Interaction with the user in natural language
      */
     naturalLanguageInteraction: string
+}
+
+export interface AgentInput {
+    /**
+     * Messages sent to the agent.
+     */
+    messages: ChatCompletionMessageParam[]
+    /**
+     * Ids of the UI elements
+     */
+    uiElementIds: string[]
 }
