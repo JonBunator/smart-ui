@@ -9,12 +9,19 @@ import {flattenUIState, getUIElementIDs, getUIInteractionExamples} from "./helpe
 
 interface SmartAgentProviderContextType {
     /**
-     * Sends a prompt to the AI agent.
+     * Sends an user prompt to the AI agent.
      * @param prompt The message to send.
      * @param chatHistoryMemory Indicates how many messages the AI knows about. A higher number results in a higher
      * number of tokens. Must be greater than 0. When undefined, the default value is used.
      */
     sendPrompt: (prompt: string, chatHistoryMemory?: number) => Promise<void>;
+    /**
+     * Sends an event to the AI agent.
+     * @param prompt The message to send.
+     * @param chatHistoryMemory Indicates how many messages the AI knows about. A higher number results in a higher
+     * number of tokens. Must be greater than 0. When undefined, the default value is used.
+     */
+    sendEvent: (prompt: string, chatHistoryMemory?: number) => Promise<void>;
     /**
      * Accept or deny suggested changes of the AI agent.
      * @param accept Accepts the changes when true.
@@ -52,13 +59,17 @@ export interface SmartAgentProviderProps {
      */
     defaultChatHistoryMemory?: number;
     /**
+     * The language in which the agent should respond. Default value is english.
+     */
+    language?: string
+    /**
      * Children nodes.
      */
     children: ReactNode;
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {callAgent, defaultChatHistoryMemory = 5, children} = props;
+    const {callAgent, defaultChatHistoryMemory = 5, language = 'english', children} = props;
 
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
@@ -74,8 +85,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         saveChatHistoryToSessionStorage(chatHistory);
     }, [chatHistory]);
 
-
-    const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
+    const sendMessage = useCallback(async (prompt: string, messageRole: ChatMessageCreator, chatHistoryMemory?: number): Promise<void> => {
         if(defaultChatHistoryMemory < 1) {
             console.error(`Configuration error: defaultChatHistoryMemory has value of ${defaultChatHistoryMemory} and must be greater than 0!`);
             return;
@@ -101,56 +111,26 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             content: uiStatePrompt,
         })
         messages.push({
-            role: ChatMessageCreator.USER,
+            role: messageRole,
             content: prompt,
         })
-        messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: getInstructionPrompt()})
+        messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: getInstructionPrompt(language)})
 
         setChatHistory((prev) => [...prev,
-            {
-                creator: ChatMessageCreator.SYSTEM,
-                message: uiStatePrompt,
-                sentTime: (new Date()).toUTCString()
-            },
-            {
-                creator: ChatMessageCreator.USER,
-                message: prompt,
-                sentTime: (new Date()).toUTCString()
-            },
+                {
+                    creator: ChatMessageCreator.SYSTEM,
+                    message: uiStatePrompt,
+                    sentTime: (new Date()).toUTCString()
+                },
+                {
+                    creator: messageRole,
+                    message: prompt,
+                    sentTime: (new Date()).toUTCString()
+                },
             ]
         )
 
         const response: AgentResponse  = await callAgent({messages: messages, uiElementIds: uiElementIds});
-        /*const updates: ValueUpdate[]  = [
-            {
-                "id": "name",
-                "value": "Jonas"
-            },
-            {
-                "id": "age",
-                "value": 24
-            },
-            {
-                "id": "gender-male",
-                "value": true
-            },
-            {
-                "id": "interests-sports",
-                "value": true
-            },
-            {
-                "id": "interests-other",
-                "value": "Rubik's Cubes"
-            },
-            {
-                "id": "favourite-animal",
-                "value": "Bird"
-            },
-            {
-                "id": "smart-button",
-                "value": ""
-            },
-        ];*/
         console.log(response.uiInteractions);
         console.log(response.naturalLanguageInteraction);
 
@@ -166,7 +146,15 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             sentTime: (new Date()).toUTCString()}]
         )
         setLoading(false);
-    }, [getHierarchy, defaultChatHistoryMemory, chatHistory, callAgent, suggestValueChanges, approvalRequired]);
+    }, [defaultChatHistoryMemory, getHierarchy, chatHistory, language, callAgent, suggestValueChanges, approvalRequired]);
+
+    const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
+        await sendMessage(prompt, ChatMessageCreator.USER, chatHistoryMemory);
+    }, [sendMessage]);
+
+    const sendEvent = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
+        await sendMessage(`This event was triggered by the system: ${prompt}`, ChatMessageCreator.SYSTEM, chatHistoryMemory);
+    }, [sendMessage]);
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
         await handleChangeApproval(accept);
@@ -179,12 +167,13 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
     const value = useMemo(() => ({
         sendPrompt: sendPrompt,
+        sendEvent: sendEvent,
         handleChangeApproval: changeApproval,
         deleteChatHistory: deleteChatHistory,
         approvalRequired: approvalRequired,
         chatHistory: chatHistory,
         loading,
-    }), [sendPrompt, changeApproval, deleteChatHistory, approvalRequired, chatHistory, loading]);
+    }), [sendPrompt, sendEvent, changeApproval, deleteChatHistory, approvalRequired, chatHistory, loading]);
 
 
     return (
