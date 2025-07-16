@@ -13,15 +13,17 @@ interface SmartAgentProviderContextType {
      * @param prompt The message to send.
      * @param chatHistoryMemory Indicates how many messages the AI knows about. A higher number results in a higher
      * number of tokens. Must be greater than 0. When undefined, the default value is used.
+     * @param loadingText Text that should be used while the response is loading.
      */
-    sendPrompt: (prompt: string, chatHistoryMemory?: number) => Promise<void>;
+    sendPrompt: (prompt: string, chatHistoryMemory?: number, loadingText?: string) => Promise<void>;
     /**
      * Sends an event to the AI agent.
      * @param prompt The message to send.
      * @param chatHistoryMemory Indicates how many messages the AI knows about. A higher number results in a higher
      * number of tokens. Must be greater than 0. When undefined, the default value is used.
+     * @param loadingText Text that should be used while the response is loading.
      */
-    sendEvent: (prompt: string, chatHistoryMemory?: number) => Promise<void>;
+    sendEvent: (prompt: string, chatHistoryMemory?: number, loadingText?: string) => Promise<void>;
     /**
      * Accept or deny suggested changes of the AI agent.
      * @param accept Accepts the changes when true.
@@ -43,6 +45,10 @@ interface SmartAgentProviderContextType {
      * Loading is true when user waits for agent response.
      */
     loading: boolean;
+    /**
+     * Loading text that indicates why response is loading.
+     */
+    loadingText: string | undefined;
 }
 
 const SmartAgentProviderContext = createContext<SmartAgentProviderContextType | undefined>(undefined);
@@ -75,6 +81,8 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
     const [approvalRequired, setApprovalRequired] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [loadingText, setLoadingText] = useState<string | undefined>(undefined);
+
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
 
     useEffect(() => {
@@ -85,7 +93,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         saveChatHistoryToSessionStorage(chatHistory);
     }, [chatHistory]);
 
-    const sendMessage = useCallback(async (prompt: string, messageRole: ChatMessageCreator, chatHistoryMemory?: number): Promise<void> => {
+    const sendMessage = useCallback(async (prompt: string, messageRole: ChatMessageCreator, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
         if(defaultChatHistoryMemory < 1) {
             console.error(`Configuration error: defaultChatHistoryMemory has value of ${defaultChatHistoryMemory} and must be greater than 0!`);
             return;
@@ -94,7 +102,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             return;
         }
         setLoading(true);
-
+        setLoadingText(loadingText);
         const state = getHierarchy();
         const uiStateFlat = flattenUIState(state);
         const uiInteractionExamples = getUIInteractionExamples(uiStateFlat);
@@ -146,14 +154,15 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             sentTime: (new Date()).toUTCString()}]
         )
         setLoading(false);
+        setLoadingText(undefined);
     }, [defaultChatHistoryMemory, getHierarchy, chatHistory, language, callAgent, suggestValueChanges, approvalRequired]);
 
-    const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
-        await sendMessage(prompt, ChatMessageCreator.USER, chatHistoryMemory);
+    const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
+        await sendMessage(prompt, ChatMessageCreator.USER, chatHistoryMemory, loadingText);
     }, [sendMessage]);
 
-    const sendEvent = useCallback(async (prompt: string, chatHistoryMemory?: number): Promise<void> => {
-        await sendMessage(`This event was triggered by the system: ${prompt}`, ChatMessageCreator.SYSTEM, chatHistoryMemory);
+    const sendEvent = useCallback(async (prompt: string, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
+        await sendMessage(`This event was triggered by the system: ${prompt}`, ChatMessageCreator.SYSTEM, chatHistoryMemory, loadingText);
     }, [sendMessage]);
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
@@ -173,7 +182,8 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         approvalRequired: approvalRequired,
         chatHistory: chatHistory,
         loading,
-    }), [sendPrompt, sendEvent, changeApproval, deleteChatHistory, approvalRequired, chatHistory, loading]);
+        loadingText,
+    }), [sendPrompt, sendEvent, changeApproval, deleteChatHistory, approvalRequired, chatHistory, loading, loadingText]);
 
 
     return (
