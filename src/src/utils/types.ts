@@ -1,5 +1,5 @@
 import {ReactNode} from "react";
-import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
+import {ChatCompletionMessageParam, ChatCompletionTool} from "openai/resources/chat/completions/completions";
 
 export interface SmartComponentValue {
     /**
@@ -97,20 +97,16 @@ export enum ChatMessageCreator {
  */
 export interface ChatMessage {
     /**
-     * Creator of the message
-     */
-    creator: ChatMessageCreator
-    /**
      * Chat message
      */
-    message: string
+    message: ChatCompletionMessageParam
     /**
      * Time the message was sent. In RFC 1123 date format.
      */
     sentTime: string
 }
 
-export interface AgentResponse {
+export interface AgentOutput {
     /**
      * List of ui interactions that should be executed
      */
@@ -119,6 +115,17 @@ export interface AgentResponse {
      * Interaction with the user in natural language
      */
     naturalLanguageInteraction: string
+}
+
+export interface AgentResponse {
+    /**
+     * Output of the agent.
+     */
+    agentOutput: AgentOutput
+    /**
+     * Messages that were created by tool function invocation.
+     */
+    toolMessages?: ChatCompletionMessageParam[]
 }
 
 export interface AgentInput {
@@ -130,4 +137,22 @@ export interface AgentInput {
      * Ids of the UI elements
      */
     uiElementIds: string[]
+}
+
+export interface ToolFunction {
+    /**
+     * Info about the tool.
+     */
+    tool: ChatCompletionTool
+    /**
+     * The function that should be invoked.
+     */
+    function: (args: any) => any;
+}
+
+export interface OptionalAgentInput {
+    /**
+     * Tools that can be called by agent.
+     */
+    tools?: ToolFunction[]
 }

@@ -110,10 +110,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const uiStatePrompt = getNextUIStatePrompt(state, uiInteractionExamples);
         const memory = chatHistoryMemory ?? defaultChatHistoryMemory;
 
-        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map((chatMessage) => ( {
-            role: chatMessage.creator,
-            content: chatMessage.message,
-        }));
+        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map(message => message.message);
         messages.push({
             role: ChatMessageCreator.SYSTEM,
             content: uiStatePrompt,
@@ -126,31 +123,35 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
         setChatHistory((prev) => [...prev,
                 {
-                    creator: ChatMessageCreator.SYSTEM,
-                    message: uiStatePrompt,
+                    message: {role: ChatMessageCreator.SYSTEM, content: uiStatePrompt},
                     sentTime: (new Date()).toUTCString()
                 },
                 {
-                    creator: messageRole,
-                    message: prompt,
+                    message: {role: messageRole, content: prompt},
                     sentTime: (new Date()).toUTCString()
                 },
             ]
         )
 
         const response: AgentResponse  = await callAgent({messages: messages, uiElementIds: uiElementIds});
-        console.log(response.uiInteractions);
-        console.log(response.naturalLanguageInteraction);
+        const agentOutput = response.agentOutput;
+        const toolMessages = response.toolMessages?.map(message => ({message: message, sentTime: (new Date()).toUTCString()}));
 
-        const changedDetected = await suggestValueChanges(response.uiInteractions);
+        if(toolMessages !== undefined) {
+            setChatHistory((prev) => [...prev, ...toolMessages]);
+        }
+
+        console.log(agentOutput.uiInteractions);
+        console.log(agentOutput.naturalLanguageInteraction);
+
+        const changedDetected = await suggestValueChanges(agentOutput.uiInteractions);
         if(changedDetected) {
-            setApprovalRequired(response.uiInteractions.length > 0 || approvalRequired);
+            setApprovalRequired(agentOutput.uiInteractions.length > 0 || approvalRequired);
         } else {
             setApprovalRequired(false);
         }
         setChatHistory((prev) => [...prev, {
-            creator: ChatMessageCreator.AGENT,
-            message: JSON.stringify(response),
+            message: {role: ChatMessageCreator.AGENT, content: JSON.stringify(agentOutput)},
             sentTime: (new Date()).toUTCString()}]
         )
         setLoading(false);

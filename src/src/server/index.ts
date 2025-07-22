@@ -1,7 +1,10 @@
 import { z } from "zod";
 import {zodResponseFormat} from "openai/helpers/zod";
 import OpenAI from "openai";
-import {AgentInput, AgentResponse} from "../utils/types.ts";
+import {AgentInput, AgentResponse, OptionalAgentInput, ToolFunction} from "../utils/types.ts";
+import {
+    ChatCompletionMessageParam,
+} from "openai/resources/chat/completions/completions";
 
 function createOutputSchema(idTypes: string[]) {
     const UIInteraction = z.object({
@@ -13,26 +16,65 @@ function createOutputSchema(idTypes: string[]) {
         uiInteractions: z.array(UIInteraction).describe("List of UI interactions that should be executed"),
         naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language"),
     });
-    return  zodResponseFormat(OutputSchema, "ui_interaction");
+    return zodResponseFormat(OutputSchema, "ui_interaction");
 }
 
-
-export async function callAgent(client: OpenAI, agentInput: AgentInput): Promise<AgentResponse> {
-
+async function promptAgent(client: OpenAI, agentInput: AgentInput, optionalAgentInput?: OptionalAgentInput) {
     const model = "gpt-4o";
-    const response = await client.chat.completions.create({
+    return client.chat.completions.create({
         model: model,
         messages: agentInput.messages,
         temperature: 1,
         top_p: 1,
         response_format: createOutputSchema(agentInput.uiElementIds),
+        tools: optionalAgentInput?.tools?.map(item => item.tool),
     });
-    const message = response.choices[0].message;
+}
+
+export async function callAgent(client: OpenAI, agentInput: AgentInput, optionalAgentInput?: OptionalAgentInput): Promise<AgentResponse> {
+    let response = await promptAgent(client, agentInput, optionalAgentInput);
+    const choice = response.choices[0];
+    let message = choice.message;
+
+    const toolResults: ChatCompletionMessageParam[] = [];
+    if(choice.finish_reason === 'tool_calls' && message.tool_calls) {
+        const toolMap: Map<string, ToolFunction> = new Map();
+        optionalAgentInput?.tools?.forEach(item => {
+            toolMap.set(item.tool.function.name, item);
+        });
+
+        toolResults.push({
+                role: "assistant",
+                tool_calls: message.tool_calls
+            }
+        )
+        for(const tool of message.tool_calls) {
+            if(toolMap.has(tool.function.name)) {
+                const toolFunction = toolMap.get(tool.function.name)?.function;
+                if(!toolFunction) {
+                    continue;
+                }
+                const parsedArguments = JSON.parse(tool.function.arguments);
+                const result = await toolFunction(parsedArguments);
+                toolResults.push({
+                    role: "tool",
+                    tool_call_id: tool.id,
+                    content: JSON.stringify(result),
+                });
+            }
+        }
+        const newAgentInput = {...agentInput, messages: [...agentInput.messages, ...toolResults]};
+        response = await promptAgent(client, newAgentInput, optionalAgentInput);
+    }
+    message = response.choices[0].message;
+
+    const toolMessages = toolResults.length !== 0 ? toolResults : undefined;
+
     if(message.refusal) {
-        return {uiInteractions: [], naturalLanguageInteraction: message.refusal}
+        return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: message.refusal}, toolMessages}
     }
     if(message.content) {
-        return JSON.parse(message.content);
+        return {agentOutput: JSON.parse(message.content), toolMessages};
     }
-    return {uiInteractions: [], naturalLanguageInteraction: "An error occurred"};
+    return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, toolMessages};
 }
