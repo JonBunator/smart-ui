@@ -110,7 +110,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const uiStatePrompt = getNextUIStatePrompt(state, uiInteractionExamples);
         const memory = chatHistoryMemory ?? defaultChatHistoryMemory;
 
-        const messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map(message => message.message);
+        let messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map(message => message.message);
         messages.push({
             role: ChatMessageCreator.SYSTEM,
             content: uiStatePrompt,
@@ -119,8 +119,13 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             role: messageRole,
             content: prompt,
         })
-        messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: getInstructionPrompt(language)})
 
+        // Remove tool messages when tool invocation is missing
+        if (messages[0].role === 'tool') {
+            const firstNonToolIndex = messages.findIndex(item => item.role !== 'tool');
+            messages = firstNonToolIndex === -1 ? [] : messages.slice(firstNonToolIndex);
+            messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: getInstructionPrompt(language)})
+        }
         setChatHistory((prev) => [...prev,
                 {
                     message: {role: ChatMessageCreator.SYSTEM, content: uiStatePrompt},
