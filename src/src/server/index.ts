@@ -20,7 +20,7 @@ function createOutputSchema(idTypes: string[]) {
 }
 
 async function promptAgent(client: OpenAI, agentInput: AgentInput, optionalAgentInput?: OptionalAgentInput) {
-    const model = "gpt-4o";
+    const model = "gpt-4.1";
     return client.chat.completions.create({
         model: model,
         messages: agentInput.messages,
@@ -32,10 +32,11 @@ async function promptAgent(client: OpenAI, agentInput: AgentInput, optionalAgent
 }
 
 export async function callAgent(client: OpenAI, agentInput: AgentInput, optionalAgentInput?: OptionalAgentInput): Promise<AgentResponse> {
-    let response = await promptAgent(client, agentInput, optionalAgentInput);
+    const response = await promptAgent(client, agentInput, optionalAgentInput);
     const choice = response.choices[0];
-    let message = choice.message;
+    const message = choice.message;
 
+    console.log("firstMessage", JSON.stringify(message));
     const toolResults: ChatCompletionMessageParam[] = [];
     if(choice.finish_reason === 'tool_calls' && message.tool_calls) {
         const toolMap: Map<string, ToolFunction> = new Map();
@@ -64,17 +65,17 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
             }
         }
         const newAgentInput = {...agentInput, messages: [...agentInput.messages, ...toolResults]};
-        response = await promptAgent(client, newAgentInput, optionalAgentInput);
+        return await callAgent(client, newAgentInput, optionalAgentInput);
     }
-    message = response.choices[0].message;
 
-    const toolMessages = toolResults.length !== 0 ? toolResults : undefined;
+    const messages = agentInput.messages;
 
     if(message.refusal) {
-        return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: message.refusal}, toolMessages}
+        return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: message.refusal}, messages}
     }
+    console.log("secondMessage", JSON.stringify(message))
     if(message.content) {
-        return {agentOutput: JSON.parse(message.content), toolMessages};
+        return {agentOutput: JSON.parse(message.content), messages};
     }
-    return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, toolMessages};
+    return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, messages};
 }

@@ -140,9 +140,10 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
         const response: AgentResponse  = await callAgent({messages: messages, uiElementIds: uiElementIds});
         const agentOutput = response.agentOutput;
-        const toolMessages = response.toolMessages?.map(message => ({message: message, sentTime: (new Date()).toUTCString()}));
+        const newMessages = response.messages.slice(messages.length);
 
-        if(toolMessages !== undefined) {
+        if(newMessages !== undefined) {
+            const toolMessages = newMessages.map(message => ({message: message, sentTime: (new Date()).toUTCString()}));
             setChatHistory((prev) => [...prev, ...toolMessages]);
         }
 

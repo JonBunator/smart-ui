@@ -123,9 +123,9 @@ export interface AgentResponse {
      */
     agentOutput: AgentOutput
     /**
-     * Messages that were created by tool function invocation.
+     * New messages that contain appended messages from agent.
      */
-    toolMessages?: ChatCompletionMessageParam[]
+    messages: ChatCompletionMessageParam[]
 }
 
 export interface AgentInput {
