@@ -65,9 +65,9 @@ export interface SmartAgentProviderProps {
      */
     defaultChatHistoryMemory?: number;
     /**
-     * The language in which the agent should respond. Default value is english.
+     * Change the default system instructions.
      */
-    language?: string
+    customSystemPrompt?: string
     /**
      * Children nodes.
      */
@@ -75,7 +75,7 @@ export interface SmartAgentProviderProps {
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {callAgent, defaultChatHistoryMemory = 5, language = 'english', children} = props;
+    const {callAgent, defaultChatHistoryMemory = 5, customSystemPrompt, children} = props;
 
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
@@ -124,8 +124,11 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         if (messages[0].role === 'tool') {
             const firstNonToolIndex = messages.findIndex(item => item.role !== 'tool');
             messages = firstNonToolIndex === -1 ? [] : messages.slice(firstNonToolIndex);
-            messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: getInstructionPrompt(language)})
         }
+        const systemInstructions = customSystemPrompt ?? getInstructionPrompt();
+        console.log(systemInstructions,customSystemPrompt);
+
+        messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: systemInstructions})
         setChatHistory((prev) => [...prev,
                 {
                     message: {role: ChatMessageCreator.SYSTEM, content: uiStatePrompt},
@@ -162,7 +165,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         )
         setLoading(false);
         setLoadingText(undefined);
-    }, [defaultChatHistoryMemory, getHierarchy, chatHistory, language, callAgent, suggestValueChanges, approvalRequired]);
+    }, [defaultChatHistoryMemory, getHierarchy, chatHistory, callAgent, suggestValueChanges, customSystemPrompt, approvalRequired]);
 
     const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
         await sendMessage(prompt, ChatMessageCreator.USER, chatHistoryMemory, loadingText);

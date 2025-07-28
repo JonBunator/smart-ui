@@ -75,7 +75,16 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     }
     console.log("secondMessage", JSON.stringify(message))
     if(message.content) {
-        return {agentOutput: JSON.parse(message.content), messages};
+        try {
+            // Workaround because openai sometimes returns multiple JSON outputs
+            const content = message.content.split("\n{")[0];
+            const parsedContent = JSON.parse(content);
+
+            return {agentOutput: parsedContent, messages};
+        } catch(e) {
+            console.error(e);
+            return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, messages};
+        }
     }
     return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, messages};
 }
