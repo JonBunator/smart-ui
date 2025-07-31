@@ -14,4 +14,5 @@ export type { ValueUpdate } from './utils/types';
 export type { SmartComponentElementProps } from './utils/types';
 export { ChatMessageCreator } from './utils/types';
 export type { ChatMessage } from './utils/types';
+export type { PageDescription } from './utils/types';
 

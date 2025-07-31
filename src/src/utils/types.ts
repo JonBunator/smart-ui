@@ -156,3 +156,14 @@ export interface OptionalAgentInput {
      */
     tools?: ToolFunction[]
 }
+
+export interface PageDescription {
+    /**
+     * Path of the page.
+     */
+    path: string
+    /**
+     * Describes what the page is used for.
+     */
+    description: string
+}

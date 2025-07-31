@@ -1,7 +1,7 @@
 import {createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState} from 'react';
-import {getInstructionPrompt, getNextUIStatePrompt} from "./agentPrompts.ts";
+import {getInstructionPrompt, getNextUIStatePrompt, getPageDescriptions} from "./agentPrompts.ts";
 import {useSmartComponentManager} from "../SmartComponentManager";
-import {AgentInput, ChatMessage, ChatMessageCreator} from "../../utils/types.ts";
+import {AgentInput, ChatMessage, ChatMessageCreator, PageDescription} from "../../utils/types.ts";
 import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
 import {loadChatHistoryFromSessionStorage, saveChatHistoryToSessionStorage} from "../../internal/sessionStorage.ts";
 import {AgentResponse} from "../../utils/types";
@@ -69,13 +69,21 @@ export interface SmartAgentProviderProps {
      */
     customSystemPrompt?: string
     /**
+     * The path of the current page. This is used to tell the agent on which page the user is currently on.
+     */
+    currentPagePath?: string
+    /**
+     * Describes for what the pages are used for.
+     */
+    pageDescriptions?: PageDescription[]
+    /**
      * Children nodes.
      */
     children: ReactNode;
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {callAgent, defaultChatHistoryMemory = 5, customSystemPrompt, children} = props;
+    const {callAgent, defaultChatHistoryMemory = 5, customSystemPrompt, currentPagePath, pageDescriptions, children} = props;
 
     const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
 
@@ -107,8 +115,10 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const uiStateFlat = flattenUIState(state);
         const uiInteractionExamples = getUIInteractionExamples(uiStateFlat);
         const uiElementIds = getUIElementIDs(uiStateFlat);
-        const uiStatePrompt = getNextUIStatePrompt(state, uiInteractionExamples);
+        const uiStatePrompt = getNextUIStatePrompt(state, uiInteractionExamples, currentPagePath);
         const memory = chatHistoryMemory ?? defaultChatHistoryMemory;
+        const systemPrompt = customSystemPrompt ?? getInstructionPrompt();
+        const systemInstructions = `${systemPrompt}${getPageDescriptions(pageDescriptions)}`
 
         let messages: ChatCompletionMessageParam[] = chatHistory.slice(-memory).map(message => message.message);
         messages.push({
@@ -125,8 +135,6 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             const firstNonToolIndex = messages.findIndex(item => item.role !== 'tool');
             messages = firstNonToolIndex === -1 ? [] : messages.slice(firstNonToolIndex);
         }
-        const systemInstructions = customSystemPrompt ?? getInstructionPrompt();
-        console.log(systemInstructions,customSystemPrompt);
 
         messages.splice(0, 0, {role: ChatMessageCreator.SYSTEM, content: systemInstructions})
         setChatHistory((prev) => [...prev,
