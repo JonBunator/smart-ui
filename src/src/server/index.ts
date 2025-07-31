@@ -24,8 +24,7 @@ async function promptAgent(client: OpenAI, agentInput: AgentInput, optionalAgent
     return client.chat.completions.create({
         model: model,
         messages: agentInput.messages,
-        temperature: 1,
-        top_p: 1,
+        temperature: 0.0,
         response_format: createOutputSchema(agentInput.uiElementIds),
         tools: optionalAgentInput?.tools?.map(item => item.tool),
     });
