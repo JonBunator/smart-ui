@@ -11,7 +11,7 @@ export type SmartTextareaProps =  React.DetailedHTMLProps<React.TextareaHTMLAttr
 };
 
 const SmartTextarea = forwardRef<HTMLTextAreaElement, SmartTextareaProps>((props, ref) => {
-    const { value, id, className, smartSemantic, label, ...restProps } = props
+    const { value, id, className, smartSemantic, label, required, ...restProps } = props
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     /**
@@ -40,8 +40,9 @@ const SmartTextarea = forwardRef<HTMLTextAreaElement, SmartTextareaProps>((props
                       type="textarea"
                       label={extractTextFromNode(label)}
                       semantic={smartSemantic}
-                      smartOnChange={updateValue}>
-          <textarea ref={textareaRef} className={`${className} smart-component`} id={id} value={value} {...restProps}/>
+                      smartOnChange={updateValue}
+                      required={required ? true : undefined}>
+          <textarea ref={textareaRef} className={`${className} smart-component`} id={id} value={value} required={required} {...restProps}/>
       </SmartComponent>
   )
 });

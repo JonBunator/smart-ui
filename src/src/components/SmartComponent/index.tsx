@@ -89,7 +89,7 @@ export function SmartComponent(props: SmartComponentProps) {
         return () => {
             removeComponent(parentID, componentId);
         }
-    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value, smartProps.label, smartProps.options, smartProps.href, removeComponent, onChange, handleChangeApproval]);
+    }, [parentID, addComponent, componentId, smartProps.semantic, smartProps.type, smartProps.value, smartProps.label, smartProps.options, smartProps.href, smartProps.required, removeComponent, onChange, handleChangeApproval]);
 
 
     /**

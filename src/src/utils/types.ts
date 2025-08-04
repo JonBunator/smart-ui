@@ -38,6 +38,10 @@ export interface SmartComponentValue {
      * Navigates to new page when interacting with element.
      */
     href?: string;
+    /**
+     * Specifies that the user must fill in a value.
+     */
+    required?: boolean;
 }
 
 /**

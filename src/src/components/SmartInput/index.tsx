@@ -11,7 +11,7 @@ export type SmartInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<
 };
 
 const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) => {
-    const { value, onChange, type, id, checked, className, smartSemantic, label, pattern, placeholder, ...restProps } = props
+    const { value, onChange, type, id, checked, className, smartSemantic, label, pattern, placeholder, required, ...restProps } = props
     const inputRef = useRef<HTMLInputElement>(null);
     const [checkedValue, setCheckedValue] = useState<ValueType|undefined>(undefined);
 
@@ -70,8 +70,9 @@ const SmartInput = forwardRef<HTMLInputElement, SmartInputProps>((props, ref) =>
                       onApprove={handleApprove}
                       pattern={pattern}
                       placeholder={placeholder}
+                      required={required ? true : undefined}
       >
-          <input ref={inputRef} className={`${className} smart-component`} id={id} checked={checked} value={value} onChange={onChange} type={type} pattern={pattern} placeholder={placeholder} {...restProps}/>
+          <input ref={inputRef} className={`${className} smart-component`} id={id} checked={checked} value={value} onChange={onChange} type={type} pattern={pattern} placeholder={placeholder} required={required} {...restProps}/>
       </SmartComponent>
   )
 });

@@ -14,7 +14,7 @@ function createOutputSchema(idTypes: string[]) {
 
     const OutputSchema = z.object({
         uiInteractions: z.array(UIInteraction).describe("List of UI interactions that should be executed"),
-        naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language"),
+        naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting"),
     });
     return zodResponseFormat(OutputSchema, "ui_interaction");
 }
