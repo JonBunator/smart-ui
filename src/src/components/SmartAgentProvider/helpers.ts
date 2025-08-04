@@ -1,4 +1,5 @@
 import {SmartComponentElement} from "../SmartComponentManager";
+import {ChatMessage, ChatMessageCreator, ValueUpdate} from "../../utils/types.ts";
 
 type InteractionFunction = (value: SmartComponentElement) => string | boolean | number;
 
@@ -99,4 +100,40 @@ export function flattenUIState(uiState: SmartComponentElement[]): SmartComponent
 
     traverse(uiState);
     return result;
+}
+
+/**
+ * Extracts page transition path from ui interaction. Element must have href property.
+ * @param uiInteractions The elements and values the agent want to interact with.
+ * @param uiStateFlat The flat state of the ui.
+ */
+export function getPageTransitionPath(uiInteractions: ValueUpdate[], uiStateFlat: SmartComponentElement[]): string | undefined {
+    const uiStateMap = uiStateFlat.reduce<{ [key: string]: SmartComponentElement }>((acc, element) => {
+        acc[element.id] = element;
+        return acc;
+    }, {});
+    const valueUpdate = uiInteractions.find(uiInteraction => uiStateMap[uiInteraction.id].href !== undefined);
+    if(valueUpdate) {
+        return uiStateMap[valueUpdate.id].href;
+    }
+    return undefined;
+}
+
+/**
+ * Finds page transition path to different page from chat history.
+ * @param chatHistory The chat history with the agent.
+ */
+export function findPageTransitionPath(chatHistory: ChatMessage[]): string | null {
+    if(chatHistory.length === 0) {
+        return null;
+    }
+    for (let i = chatHistory.length - 1; i >= 0; i--) {
+        if (chatHistory[i].message.role === ChatMessageCreator.AGENT) {
+            if(chatHistory[i].message.content === undefined) {
+                return null;
+            }
+            return JSON.parse(chatHistory[i].message.content as string).path;
+        }
+    }
+    return null;
 }

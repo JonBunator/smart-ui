@@ -12,6 +12,7 @@ export type { ValueType } from './utils/types';
 export type { OptionType } from './utils/types';
 export type { ValueUpdate } from './utils/types';
 export type { SmartComponentElementProps } from './utils/types';
+export type { SmartButtonElementProps } from './utils/types';
 export { ChatMessageCreator } from './utils/types';
 export type { ChatMessage } from './utils/types';
 export type { PageDescription } from './utils/types';

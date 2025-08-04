@@ -1,4 +1,4 @@
-import {createContext, useContext, useState, ReactNode, useMemo, useCallback, useRef} from 'react';
+import {createContext, ReactNode, useCallback, useContext, useMemo, useRef, useState} from 'react';
 import {SmartComponentValue, ValueType, ValueUpdate} from "../../utils/types.ts";
 import SmartComponentParent from "../../internal/SmartComponentParent";
 
@@ -45,6 +45,11 @@ interface SmartComponentContextType {
      * @param accept Accepts the changes when true, clears them when false.
      */
     handleChangeApproval: (accept: boolean) => Promise<boolean>;
+    /**
+     * Subscribes to notifier that notifies listeners when all components are loaded. Returns unsubscribe function
+     * @param listener The listener that should listen to changes.
+     */
+    subscribeAllComponentsLoaded: (listener: () => void) => () => void;
 }
 
 const SmartComponentContext = createContext<SmartComponentContextType | undefined>(undefined);
@@ -67,6 +72,8 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     const [elementOnChangeMapping, setElementOnChangeMapping] = useState<ElementOnChangeMap>(new Map());
     const [elementOnChangeApprovalMapping, setElementOnChangeApprovalMapping] = useState<ElementOnChangeApprovalMap>(new Map());
     const suggestedValueChangesMapping = useRef<SuggestedValueChangesMap>(new Map());
+    const allComponentsLoadedTimeoutId = useRef<NodeJS.Timeout|null>(null);
+    const allComponentsLoadedListener = useRef<Set<() => void>>(new Set());
 
     const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => Promise<boolean>) => {
         setElements(prev => {
@@ -96,6 +103,14 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
             newMap.set(parentID, new Set([...existingChildren ?? [], value.id]));
             return newMap;
         });
+
+        if (allComponentsLoadedTimeoutId.current) {
+            clearTimeout(allComponentsLoadedTimeoutId.current);
+        }
+
+        allComponentsLoadedTimeoutId.current = setTimeout(() => {
+            allComponentsLoadedListener.current.forEach(listener => listener());
+        }, 1000);
     }, []);
 
     const removeComponent = useCallback((parentID: string, identifier: string) => {
@@ -188,13 +203,19 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         return suggestedValueChangesMapping.current.size !== 0;
     }, [changeValue]);
 
+    const subscribeAllComponentsLoaded = useCallback((listener: () => void) => {
+        allComponentsLoadedListener.current.add(listener);
+        return () => allComponentsLoadedListener.current.delete(listener);
+    }, []);
+
     const value = useMemo(() => ({
         addComponent: addComponent,
         removeComponent: removeComponent,
         getHierarchy: getHierarchy,
         suggestValueChanges: suggestValueChanges,
         handleChangeApproval: handleChangeApproval,
-    }), [addComponent, removeComponent, getHierarchy, suggestValueChanges, handleChangeApproval]);
+        subscribeAllComponentsLoaded
+    }), [addComponent, removeComponent, getHierarchy, suggestValueChanges, handleChangeApproval, subscribeAllComponentsLoaded]);
 
     return (
         <SmartComponentParent identifier="root">

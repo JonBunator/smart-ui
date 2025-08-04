@@ -34,6 +34,10 @@ export interface SmartComponentValue {
      * Additional semantic descriptions.
      */
     semantic?: string;
+    /**
+     * Navigates to new page when interacting with element.
+     */
+    href?: string;
 }
 
 /**
@@ -81,6 +85,16 @@ export interface SmartComponentElementProps {
      * Children elements.
      */
     children?: ReactNode;
+}
+
+/**
+ * Properties of smart button element.
+ */
+export interface SmartButtonElementProps extends SmartComponentElementProps {
+    /**
+     * Signals the agent that clicking on the button transitions to a new page specified by the href.
+     */
+    smartHref?: string;
 }
 
 /**

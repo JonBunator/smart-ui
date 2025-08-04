@@ -82,7 +82,6 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
             return {agentOutput: parsedContent, messages};
         } catch(e) {
             console.error(e);
-            return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, messages};
         }
     }
     return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, messages};

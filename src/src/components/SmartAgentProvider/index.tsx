@@ -5,7 +5,13 @@ import {AgentInput, ChatMessage, ChatMessageCreator, PageDescription} from "../.
 import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
 import {loadChatHistoryFromSessionStorage, saveChatHistoryToSessionStorage} from "../../internal/sessionStorage.ts";
 import {AgentResponse} from "../../utils/types";
-import {flattenUIState, getUIElementIDs, getUIInteractionExamples} from "./helpers.ts";
+import {
+    findPageTransitionPath,
+    flattenUIState,
+    getPageTransitionPath,
+    getUIElementIDs,
+    getUIInteractionExamples
+} from "./helpers.ts";
 
 interface SmartAgentProviderContextType {
     /**
@@ -85,12 +91,10 @@ export interface SmartAgentProviderProps {
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
     const {callAgent, defaultChatHistoryMemory = 5, customSystemPrompt, currentPagePath, pageDescriptions, children} = props;
 
-    const {getHierarchy, suggestValueChanges, handleChangeApproval} = useSmartComponentManager();
-
+    const {getHierarchy, suggestValueChanges, handleChangeApproval, subscribeAllComponentsLoaded} = useSmartComponentManager();
     const [approvalRequired, setApprovalRequired] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadingText, setLoadingText] = useState<string | undefined>(undefined);
-
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
 
     useEffect(() => {
@@ -100,7 +104,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
     useEffect(() => {
         saveChatHistoryToSessionStorage(chatHistory);
     }, [chatHistory]);
-
+    
     const sendMessage = useCallback(async (prompt: string, messageRole: ChatMessageCreator, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
         if(defaultChatHistoryMemory < 1) {
             console.error(`Configuration error: defaultChatHistoryMemory has value of ${defaultChatHistoryMemory} and must be greater than 0!`);
@@ -153,13 +157,11 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const agentOutput = response.agentOutput;
         const newMessages = response.messages.slice(messages.length);
 
+
         if(newMessages !== undefined) {
             const toolMessages = newMessages.map(message => ({message: message, sentTime: (new Date()).toUTCString()}));
             setChatHistory((prev) => [...prev, ...toolMessages]);
         }
-
-        console.log(agentOutput.uiInteractions);
-        console.log(agentOutput.naturalLanguageInteraction);
 
         const changedDetected = await suggestValueChanges(agentOutput.uiInteractions);
         if(changedDetected) {
@@ -167,13 +169,15 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         } else {
             setApprovalRequired(false);
         }
+        const output = {output: agentOutput, path: getPageTransitionPath(agentOutput.uiInteractions, uiStateFlat) };
+
         setChatHistory((prev) => [...prev, {
-            message: {role: ChatMessageCreator.AGENT, content: JSON.stringify(agentOutput)},
+            message: {role: ChatMessageCreator.AGENT, content: JSON.stringify(output)},
             sentTime: (new Date()).toUTCString()}]
         )
         setLoading(false);
         setLoadingText(undefined);
-    }, [defaultChatHistoryMemory, getHierarchy, chatHistory, callAgent, suggestValueChanges, customSystemPrompt, approvalRequired]);
+    }, [defaultChatHistoryMemory, getHierarchy, currentPagePath, customSystemPrompt, pageDescriptions, chatHistory, callAgent, suggestValueChanges, approvalRequired]);
 
     const sendPrompt = useCallback(async (prompt: string, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
         await sendMessage(prompt, ChatMessageCreator.USER, chatHistoryMemory, loadingText);
@@ -192,6 +196,19 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         setChatHistory([]);
     }, []);
 
+    useEffect(() => {
+        // Is used to send a page change event to the agent when the page is loaded
+        const unsubscribe = subscribeAllComponentsLoaded(async () => {
+            const navigationPath = findPageTransitionPath(loadChatHistoryFromSessionStorage());
+            if(navigationPath !== null && currentPagePath === navigationPath) {
+                await changeApproval(false);
+                await sendEvent(`Page changed to ${currentPagePath}`);
+                unsubscribe();
+            }
+        })
+        return () => unsubscribe();
+    }, [changeApproval, currentPagePath, getHierarchy, sendEvent, subscribeAllComponentsLoaded]);
+    
     const value = useMemo(() => ({
         sendPrompt: sendPrompt,
         sendEvent: sendEvent,
