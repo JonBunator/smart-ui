@@ -1,5 +1,8 @@
 import {ReactNode} from "react";
-import {ChatCompletionMessageParam, ChatCompletionTool} from "openai/resources/chat/completions/completions";
+import {
+    ChatCompletionFunctionTool,
+    ChatCompletionMessageParam,
+} from "openai/resources/chat/completions/completions";
 
 export interface SmartComponentValue {
     /**
@@ -161,7 +164,7 @@ export interface ToolFunction {
     /**
      * Info about the tool.
      */
-    tool: ChatCompletionTool
+    tool: ChatCompletionFunctionTool
     /**
      * The function that should be invoked.
      */

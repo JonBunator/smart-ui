@@ -3,6 +3,7 @@ import {zodResponseFormat} from "openai/helpers/zod";
 import OpenAI from "openai";
 import {AgentInput, AgentResponse, OptionalAgentInput, ToolFunction} from "../utils/types.ts";
 import {
+    ChatCompletionFunctionTool,
     ChatCompletionMessageParam,
 } from "openai/resources/chat/completions/completions";
 
@@ -39,9 +40,11 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     const toolResults: ChatCompletionMessageParam[] = [];
     if(choice.finish_reason === 'tool_calls' && message.tool_calls) {
         const toolMap: Map<string, ToolFunction> = new Map();
-        optionalAgentInput?.tools?.forEach(item => {
-            toolMap.set(item.tool.function.name, item);
-        });
+        optionalAgentInput?.tools?.filter(item => item.tool.type === "function")
+            .forEach(item => {
+                const tool = item.tool as ChatCompletionFunctionTool;
+                toolMap.set(tool.function.name, item);
+            });
 
         toolResults.push({
                 role: "assistant",
@@ -49,6 +52,9 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
             }
         )
         for(const tool of message.tool_calls) {
+            if(tool.type === "custom") {
+                continue;
+            }
             if(toolMap.has(tool.function.name)) {
                 const toolFunction = toolMap.get(tool.function.name)?.function;
                 if(!toolFunction) {
