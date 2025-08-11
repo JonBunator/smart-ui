@@ -9,13 +9,14 @@ import {
 
 function createOutputSchema(idTypes: string[]) {
     const UIInteraction = z.object({
-        id: z.enum(idTypes as [string, ...string[]]).describe("Id of the UI element"),
-        value: z.union([z.string(), z.boolean(), z.number(), z.array(z.string())]).describe("New value of the UI element")
+        id: z.enum(idTypes as [string, ...string[]]).describe("Id of the UI element."),
+        value: z.union([z.string(), z.boolean(), z.number(), z.array(z.string())]).describe("New value of the UI element.")
     });
 
     const OutputSchema = z.object({
-        uiInteractions: z.array(UIInteraction).describe("List of UI interactions that should be executed"),
-        naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting"),
+        uiInteractions: z.array(UIInteraction).describe("List of suggested UI interactions that should be executed."),
+        naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting."),
+        yesNoButtons: z.boolean().describe("Show yes and no buttons to the user for answering simple questions of the agent. Is only allowed when uiInteractions is empty."),
     });
     return zodResponseFormat(OutputSchema, "ui_interaction");
 }
@@ -76,7 +77,7 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     const messages = agentInput.messages;
 
     if(message.refusal) {
-        return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: message.refusal}, messages}
+        return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false}, messages}
     }
     console.log("secondMessage", JSON.stringify(message))
     if(message.content) {
@@ -90,5 +91,5 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
             console.error(e);
         }
     }
-    return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred"}, messages};
+    return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred", yesNoButtons: false}, messages};
 }

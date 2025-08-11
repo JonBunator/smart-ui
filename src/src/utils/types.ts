@@ -136,6 +136,10 @@ export interface AgentOutput {
      * Interaction with the user in natural language
      */
     naturalLanguageInteraction: string
+    /**
+     * Show yes and no buttons to the user for answering simple questions.
+     */
+    yesNoButtons: boolean
 }
 
 export interface AgentResponse {
