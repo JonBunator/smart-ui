@@ -7,18 +7,26 @@ import {
     ChatCompletionMessageParam,
 } from "openai/resources/chat/completions/completions";
 
-function createOutputSchema(idTypes: string[]) {
+function createOutputSchema(idTypes: string[], allowMultipleSteps: boolean) {
     const UIInteraction = z.object({
         id: z.enum(idTypes as [string, ...string[]]).describe("Id of the UI element."),
         value: z.union([z.string(), z.boolean(), z.number(), z.array(z.string())]).describe("New value of the UI element.")
     });
 
-    const OutputSchema = z.object({
+    const UserInteractionGroup = z.object({
         uiInteractions: z.array(UIInteraction).describe("List of suggested UI interactions that should be executed."),
         naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting."),
         yesNoButtons: z.boolean().describe("Show yes and no buttons to the user for answering simple questions of the agent. Is only allowed when uiInteractions is empty."),
+    }).describe("Interaction with the user.");
+
+    const OutputSchemaMultipleSteps = z.object({
+        interactionWithUser: z.array(UserInteractionGroup).min(1).describe("Suggests UI interaction changes. Groups will be suggested to the user in order."),
     });
-    return zodResponseFormat(OutputSchema, "ui_interaction");
+
+    const OutputSchemaNoMultipleSteps = z.object({
+        interactionWithUser: z.array(UserInteractionGroup).min(1).max(1).describe("Suggests UI interaction changes."),
+    });
+    return zodResponseFormat(allowMultipleSteps ? OutputSchemaMultipleSteps : OutputSchemaNoMultipleSteps, "interaction_with_user");
 }
 
 async function promptAgent(client: OpenAI, agentInput: AgentInput, optionalAgentInput?: OptionalAgentInput) {
@@ -27,7 +35,7 @@ async function promptAgent(client: OpenAI, agentInput: AgentInput, optionalAgent
         model: model,
         messages: agentInput.messages,
         temperature: 0.0,
-        response_format: createOutputSchema(agentInput.uiElementIds),
+        response_format: createOutputSchema(agentInput.uiElementIds, agentInput.allowMultipleSteps),
         tools: optionalAgentInput?.tools?.map(item => item.tool),
     });
 }
@@ -77,19 +85,19 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     const messages = agentInput.messages;
 
     if(message.refusal) {
-        return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false}, messages}
+        return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false}], messages}
     }
     console.log("secondMessage", JSON.stringify(message))
     if(message.content) {
         try {
             // Workaround because openai sometimes returns multiple JSON outputs
             const content = message.content.split("\n{")[0];
-            const parsedContent = JSON.parse(content);
+            const parsedContent = JSON.parse(content).interactionWithUser;
 
             return {agentOutput: parsedContent, messages};
         } catch(e) {
             console.error(e);
         }
     }
-    return {agentOutput: {uiInteractions: [], naturalLanguageInteraction: "An error occurred", yesNoButtons: false}, messages};
+    return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: "An error occurred", yesNoButtons: false}], messages};
 }

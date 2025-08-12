@@ -146,7 +146,7 @@ export interface AgentResponse {
     /**
      * Output of the agent.
      */
-    agentOutput: AgentOutput
+    agentOutput: AgentOutput[]
     /**
      * New messages that contain appended messages from agent.
      */
@@ -162,6 +162,10 @@ export interface AgentInput {
      * Ids of the UI elements
      */
     uiElementIds: string[]
+    /**
+     * Whether to allow multiple steps.
+     */
+    allowMultipleSteps: boolean
 }
 
 export interface ToolFunction {

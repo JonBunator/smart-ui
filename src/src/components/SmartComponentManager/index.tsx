@@ -1,4 +1,4 @@
-import {createContext, ReactNode, useCallback, useContext, useMemo, useRef, useState} from 'react';
+import {createContext, ReactNode, useCallback, useContext, useMemo, useRef} from 'react';
 import {SmartComponentValue, ValueType, ValueUpdate} from "../../utils/types.ts";
 import SmartComponentParent from "../../internal/SmartComponentParent";
 
@@ -67,42 +67,28 @@ type SuggestedValueChangesMap = Map<string, ValueUpdate>;
 
 export function SmartComponentManager(props: SubscriptionProviderProps) {
     const {children} = props;
-    const [elements, setElements] = useState<SmartComponentValueMap>(new Map());
-    const [parentChildrenMapping, setParentChildrenMapping] = useState<ParentChildMap>(new Map());
-    const [elementOnChangeMapping, setElementOnChangeMapping] = useState<ElementOnChangeMap>(new Map());
-    const [elementOnChangeApprovalMapping, setElementOnChangeApprovalMapping] = useState<ElementOnChangeApprovalMap>(new Map());
+    const elements = useRef<SmartComponentValueMap>(new Map());
+    const parentChildrenMapping = useRef<ParentChildMap>(new Map());
+    const elementOnChangeMapping = useRef<ElementOnChangeMap>(new Map());
+    const elementOnChangeApprovalMapping = useRef<ElementOnChangeApprovalMap>(new Map());
     const suggestedValueChangesMapping = useRef<SuggestedValueChangesMap>(new Map());
     const allComponentsLoadedTimeoutId = useRef<NodeJS.Timeout|null>(null);
     const allComponentsLoadedListener = useRef<Set<() => void>>(new Set());
 
     const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => Promise<boolean>) => {
-        setElements(prev => {
-            const newMap = new Map(prev);
-            newMap.set(value.id, value);
-            return newMap;
-        });
+        elements.current.set(value.id, value);
+
         if(smartOnChange) {
-            setElementOnChangeMapping(prev => {
-                const newMap = new Map(prev);
-                newMap.set(value.id, smartOnChange);
-                return newMap;
-            });
+            elementOnChangeMapping.current.set(value.id, smartOnChange);
         }
 
         if(onChangeApproval) {
-            setElementOnChangeApprovalMapping(prev => {
-                const newMap = new Map(prev);
-                newMap.set(value.id, onChangeApproval);
-                return newMap;
-            });
+            elementOnChangeApprovalMapping.current.set(value.id, onChangeApproval);
         }
 
-        setParentChildrenMapping(prev => {
-            const newMap = new Map(prev);
-            const existingChildren = newMap.get(parentID);
-            newMap.set(parentID, new Set([...existingChildren ?? [], value.id]));
-            return newMap;
-        });
+        const existingChildren = parentChildrenMapping.current.get(parentID) || new Set();
+        existingChildren.add(value.id);
+        parentChildrenMapping.current.set(parentID, existingChildren);
 
         if (allComponentsLoadedTimeoutId.current) {
             clearTimeout(allComponentsLoadedTimeoutId.current);
@@ -114,37 +100,23 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     }, []);
 
     const removeComponent = useCallback((parentID: string, identifier: string) => {
-        setElements(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(identifier);
-            return newMap;
-        });
+        elements.current.delete(identifier);
 
-        setParentChildrenMapping(prev => {
-            const newMap = new Map(prev);
-            const existingChildren = newMap.get(parentID);
+        const existingChildren = parentChildrenMapping.current.get(parentID);
+        if (existingChildren) {
+            existingChildren.delete(identifier);
+            parentChildrenMapping.current.set(parentID, existingChildren);
+        }
 
-            if (existingChildren) {
-                existingChildren.delete(identifier);
-                newMap.set(parentID, existingChildren);
-            }
-
-            return newMap;
-        });
-
-        setElementOnChangeMapping(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(identifier);
-            return newMap;
-        });
+        elementOnChangeMapping.current.delete(identifier);
     }, []);
 
     const getHierarchy = useCallback((): SmartComponentElement[] => {
         const buildHierarchy = (identifier: string): SmartComponentElement | null => {
-            const value = elements.get(identifier);
+            const value = elements.current.get(identifier);
             if(!value) return null;
 
-            const childrenIDs = parentChildrenMapping.get(identifier) || new Set();
+            const childrenIDs = parentChildrenMapping.current.get(identifier) || new Set();
             const children: SmartComponentElement[] = [];
 
             childrenIDs.forEach(childID => {
@@ -159,14 +131,14 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
                 children: children.length !== 0 ? children : undefined,
             };
         };
-        const rootChildrenIDs: string[] = Array.from(parentChildrenMapping.get("root") ?? new Set())
+        const rootChildrenIDs: string[] = Array.from(parentChildrenMapping.current.get("root") ?? new Set())
         return rootChildrenIDs
             .map(identifier => buildHierarchy(identifier))
             .filter(result => result !== null);
-    }, [elements, parentChildrenMapping]);
+    }, []);
 
     const changeValue = useCallback(async (update: ValueUpdate): Promise<boolean> => {
-        const onChangeFunction = elementOnChangeMapping.get(update.id);
+        const onChangeFunction = elementOnChangeMapping.current.get(update.id);
 
         if (onChangeFunction) {
             return await onChangeFunction(update.value);
@@ -174,12 +146,12 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
             console.warn(`No component found with identifier: ${update.id}`);
         }
         return false;
-    }, [elementOnChangeMapping]);
+    }, []);
 
     const handleChangeApproval = useCallback(async (accept: boolean): Promise<boolean> => {
         for(const valueChange of suggestedValueChangesMapping.current.values()) {
             const componentID = valueChange.id;
-            const changeApproval = elementOnChangeApprovalMapping.get(componentID);
+            const changeApproval = elementOnChangeApprovalMapping.current.get(componentID);
             if(changeApproval) {
                 await changeApproval(accept, valueChange.value);
             } else {
@@ -188,7 +160,7 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
         }
         suggestedValueChangesMapping.current = new Map();
         return true;
-    }, [elementOnChangeApprovalMapping]);
+    }, []);
 
     const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<boolean> => {
         for(const update of updates) {
