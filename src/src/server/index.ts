@@ -45,7 +45,7 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     const choice = response.choices[0];
     const message = choice.message;
 
-    console.log("firstMessage", JSON.stringify(message));
+    console.log("message", JSON.stringify(message));
     const toolResults: ChatCompletionMessageParam[] = [];
     if(choice.finish_reason === 'tool_calls' && message.tool_calls) {
         const toolMap: Map<string, ToolFunction> = new Map();
@@ -87,7 +87,6 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     if(message.refusal) {
         return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false}], messages}
     }
-    console.log("secondMessage", JSON.stringify(message))
     if(message.content) {
         try {
             // Workaround because openai sometimes returns multiple JSON outputs

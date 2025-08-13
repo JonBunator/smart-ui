@@ -165,7 +165,6 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         const agentOutput = response.agentOutput;
         const firstOutput = agentOutput[0];
         numSteps.current = agentOutput.length;
-        console.log("agentoutput", agentOutput);
         if(agentOutput.length > 1) {
             nextMessages.current = agentOutput.slice(1);
         }
@@ -212,12 +211,9 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
         await handleChangeApproval(accept);
-        console.log("nextSteps", nextMessages);
         if(accept && nextMessages.current !== undefined) {
             await suggestValueChanges(nextMessages.current[0].uiInteractions);
-            console.log(numSteps.current, nextMessages.current.length)
             if(nextMessages.current.length > 0 && numSteps.current !== undefined) {
-                console.log(numSteps.current, nextMessages.current.length, numSteps.current - nextMessages.current.length)
                 addNextChatMessage(nextMessages.current[0], numSteps.current - nextMessages.current.length + 1);
             }
             nextMessages.current = nextMessages.current?.length === 1 ? undefined : nextMessages.current?.slice(1);
