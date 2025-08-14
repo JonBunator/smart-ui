@@ -16,7 +16,7 @@ function createOutputSchema(idTypes: string[], allowMultipleSteps: boolean) {
     const UserInteractionGroup = z.object({
         uiInteractions: z.array(UIInteraction).describe("List of suggested UI interactions that should be executed."),
         naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting."),
-        yesNoButtons: z.boolean().describe("Show yes and no buttons to the user for answering simple questions of the agent. Is only allowed when uiInteractions is empty."),
+        yesNoButtons: z.boolean().describe("Show yes and no buttons to the user for answering simple questions of the agent."),
     }).describe("Interaction with the user.");
 
     const OutputSchemaMultipleSteps = z.object({
