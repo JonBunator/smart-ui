@@ -51,13 +51,13 @@ export function getUIInteractionExamples(uiStateFlat: SmartComponentElement[]): 
     const elements: SmartComponentElement[] = _getElementsForTypes(uiStateFlat);
     const exampleInteractions = [];
     for (const element of elements) {
-        if(element.type === undefined) {
+        if (element.type === undefined) {
             continue;
         }
         const interactionFunction = typeInteractionPayload[element.type];
         if (interactionFunction) {
             exampleInteractions.push({id: element.id, value: interactionFunction(element)});
-        } else if(!ignoredTypes.has(element.type)) {
+        } else if (!ignoredTypes.has(element.type)) {
             console.warn(`No interaction example found for type: ${element.type}`);
         }
     }
@@ -113,7 +113,7 @@ export function getPageTransitionPath(uiInteractions: ValueUpdate[], uiStateFlat
         return acc;
     }, {});
     const valueUpdate = uiInteractions.find(uiInteraction => uiStateMap[uiInteraction.id].href !== undefined);
-    if(valueUpdate) {
+    if (valueUpdate) {
         return uiStateMap[valueUpdate.id].href;
     }
     return undefined;
@@ -124,12 +124,12 @@ export function getPageTransitionPath(uiInteractions: ValueUpdate[], uiStateFlat
  * @param chatHistory The chat history with the agent.
  */
 export function findPageTransitionPath(chatHistory: ChatMessage[]): string | null {
-    if(chatHistory.length === 0) {
+    if (chatHistory.length === 0) {
         return null;
     }
     for (let i = chatHistory.length - 1; i >= 0; i--) {
         if (chatHistory[i].message.role === ChatMessageCreator.AGENT) {
-            if(chatHistory[i].message.content === undefined) {
+            if (chatHistory[i].message.content === undefined) {
                 return null;
             }
             return JSON.parse(chatHistory[i].message.content as string).path;

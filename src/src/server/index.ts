@@ -1,11 +1,8 @@
-import { z } from "zod";
+import {z} from "zod";
 import {zodResponseFormat} from "openai/helpers/zod";
 import OpenAI from "openai";
 import {AgentInput, AgentResponse, OptionalAgentInput, ToolFunction} from "../utils/types.ts";
-import {
-    ChatCompletionFunctionTool,
-    ChatCompletionMessageParam,
-} from "openai/resources/chat/completions/completions";
+import {ChatCompletionFunctionTool, ChatCompletionMessageParam,} from "openai/resources/chat/completions/completions";
 
 function createOutputSchema(idTypes: string[], allowMultipleSteps: boolean) {
     const UIInteraction = z.object({
@@ -48,7 +45,7 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
 
     console.log("message", JSON.stringify(message));
     const toolResults: ChatCompletionMessageParam[] = [];
-    if(choice.finish_reason === 'tool_calls' && message.tool_calls) {
+    if (choice.finish_reason === 'tool_calls' && message.tool_calls) {
         const toolMap: Map<string, ToolFunction> = new Map();
         optionalAgentInput?.tools?.filter(item => item.tool.type === "function")
             .forEach(item => {
@@ -61,13 +58,13 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
                 tool_calls: message.tool_calls
             }
         )
-        for(const tool of message.tool_calls) {
-            if(tool.type === "custom") {
+        for (const tool of message.tool_calls) {
+            if (tool.type === "custom") {
                 continue;
             }
-            if(toolMap.has(tool.function.name)) {
+            if (toolMap.has(tool.function.name)) {
                 const toolFunction = toolMap.get(tool.function.name)?.function;
-                if(!toolFunction) {
+                if (!toolFunction) {
                     continue;
                 }
                 const parsedArguments = JSON.parse(tool.function.arguments);
@@ -85,19 +82,33 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
 
     const messages = agentInput.messages;
 
-    if(message.refusal) {
-        return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false, motivation: ""}], messages}
+    if (message.refusal) {
+        return {
+            agentOutput: [{
+                uiInteractions: [],
+                naturalLanguageInteraction: message.refusal,
+                yesNoButtons: false,
+                motivation: ""
+            }], messages
+        }
     }
-    if(message.content) {
+    if (message.content) {
         try {
             // Workaround because openai sometimes returns multiple JSON outputs
             const content = message.content.split("\n{")[0];
             const parsedContent = JSON.parse(content).interactionWithUser;
 
             return {agentOutput: parsedContent, messages};
-        } catch(e) {
+        } catch (e) {
             console.error(e);
         }
     }
-    return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: "An error occurred", yesNoButtons: false, motivation: ""}], messages};
+    return {
+        agentOutput: [{
+            uiInteractions: [],
+            naturalLanguageInteraction: "An error occurred",
+            yesNoButtons: false,
+            motivation: ""
+        }], messages
+    };
 }

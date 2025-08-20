@@ -1,4 +1,4 @@
-import { SmartComponentElement } from "../SmartComponentManager";
+import {SmartComponentElement} from "../SmartComponentManager";
 import {UIInteractionExample} from "./helpers.ts";
 import {PageDescription} from "../../utils/types.ts";
 
@@ -7,7 +7,7 @@ export function getInstructionPrompt() {
 }
 
 export function getPageDescriptions(pageDescriptions?: PageDescription[]): string {
-    if(pageDescriptions === undefined || pageDescriptions.length === 0){
+    if (pageDescriptions === undefined || pageDescriptions.length === 0) {
         return "";
     }
     return `\nPage descriptions: ${JSON.stringify(pageDescriptions)}`;

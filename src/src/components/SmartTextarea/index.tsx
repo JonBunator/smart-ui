@@ -1,9 +1,12 @@
 import React, {forwardRef, ReactNode, useCallback, useImperativeHandle, useRef} from "react";
-import { SmartComponent } from "../SmartComponent";
+import {SmartComponent} from "../SmartComponent";
 import {SmartComponentElementProps, ValueType} from "../../utils/types.ts";
 import {extractTextFromNode} from "../../utils/helpers.ts";
 
-export type SmartTextareaProps =  React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> & SmartComponentElementProps & {
+export type SmartTextareaProps =
+    React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>
+    & SmartComponentElementProps
+    & {
     /**
      Label of the input.
      */
@@ -11,7 +14,7 @@ export type SmartTextareaProps =  React.DetailedHTMLProps<React.TextareaHTMLAttr
 };
 
 const SmartTextarea = forwardRef<HTMLTextAreaElement, SmartTextareaProps>((props, ref) => {
-    const { value, id, className, smartSemantic, label, required, ...restProps } = props
+    const {value, id, className, smartSemantic, label, required, ...restProps} = props
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     /**
@@ -25,7 +28,7 @@ const SmartTextarea = forwardRef<HTMLTextAreaElement, SmartTextareaProps>((props
                 "value")?.set;
             nativeInputValueSetter?.call(textareaRef.current, newValue ?? '');
 
-            const event = new Event('input', { bubbles: true });
+            const event = new Event('input', {bubbles: true});
             textareaRef.current.dispatchEvent(event);
             return true;
         }
@@ -34,17 +37,18 @@ const SmartTextarea = forwardRef<HTMLTextAreaElement, SmartTextareaProps>((props
 
     useImperativeHandle(ref, () => textareaRef.current!, []);
 
-  return (
-      <SmartComponent id={id}
-                      value={value}
-                      type="textarea"
-                      label={extractTextFromNode(label)}
-                      semantic={smartSemantic}
-                      smartOnChange={updateValue}
-                      required={required ? true : undefined}>
-          <textarea ref={textareaRef} className={`${className} smart-component`} id={id} value={value} required={required} {...restProps}/>
-      </SmartComponent>
-  )
+    return (
+        <SmartComponent id={id}
+                        value={value}
+                        type="textarea"
+                        label={extractTextFromNode(label)}
+                        semantic={smartSemantic}
+                        smartOnChange={updateValue}
+                        required={required ? true : undefined}>
+            <textarea ref={textareaRef} className={`${className} smart-component`} id={id} value={value}
+                      required={required} {...restProps}/>
+        </SmartComponent>
+    )
 });
 
 export {SmartTextarea};

@@ -34,33 +34,41 @@ export type SmartComponentProps = Omit<SmartComponentValue, 'id'> & {
 }
 
 export function SmartComponent(props: SmartComponentProps) {
-    const { children, id, smartOnChange, onApprove, updateAfterApproval = false, noResetAfterDeny = false, ...smartProps } = props;
+    const {
+        children,
+        id,
+        smartOnChange,
+        onApprove,
+        updateAfterApproval = false,
+        noResetAfterDeny = false,
+        ...smartProps
+    } = props;
 
     const [changesSuggested, setChangesSuggested] = useState<boolean>(false);
-    const initialValue = useRef<ValueType|undefined>(undefined);
+    const initialValue = useRef<ValueType | undefined>(undefined);
 
-    const { parentID } = useSmartComponentParent();
-    const { addComponent, removeComponent } = useSmartComponentManager();
+    const {parentID} = useSmartComponentParent();
+    const {addComponent, removeComponent} = useSmartComponentManager();
 
     const [componentId] = useState(id ?? getID());
 
 
     const onChange = useCallback(async (value: ValueType) => {
         // Only set initial value on first onChange call, must be reset via handleChangeApproval
-        if(initialValue.current === undefined) {
+        if (initialValue.current === undefined) {
             initialValue.current = smartProps.value;
         }
 
-        if(value === smartProps.value) {
+        if (value === smartProps.value) {
             return false;
         }
 
         let result = true;
-        if(!updateAfterApproval && smartOnChange) {
+        if (!updateAfterApproval && smartOnChange) {
             result = await smartOnChange?.(value);
         }
         // Changes suggestion should not be shown when reverted to initial value
-        if(initialValue.current !== undefined && value === initialValue.current) {
+        if (initialValue.current !== undefined && value === initialValue.current) {
             setChangesSuggested(false);
             return false;
         }
@@ -70,10 +78,10 @@ export function SmartComponent(props: SmartComponentProps) {
 
     const handleChangeApproval = useCallback(async (accept: boolean, value: ValueType) => {
         let result = true;
-        if(!noResetAfterDeny) {
-            if(!accept && !updateAfterApproval) {
+        if (!noResetAfterDeny) {
+            if (!accept && !updateAfterApproval) {
                 result = await smartOnChange?.(initialValue.current) ?? true;
-            } else if(accept && updateAfterApproval) {
+            } else if (accept && updateAfterApproval) {
                 result = await smartOnChange?.(value) ?? true;
             }
         }

@@ -2,10 +2,12 @@ import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef, 
 import {SmartComponent} from "../SmartComponent";
 import {OptionType, SmartComponentElementProps, ValueType} from "../../utils/types.ts";
 
-export type SmartSelectProps =  React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement> & SmartComponentElementProps;
+export type SmartSelectProps =
+    React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>
+    & SmartComponentElementProps;
 
 const SmartSelect = forwardRef<HTMLSelectElement, SmartSelectProps>((props, ref) => {
-    const {id, value, smartSemantic, children, ...restProps } = props
+    const {id, value, smartSemantic, children, ...restProps} = props
     const selectRef = useRef<HTMLSelectElement>(null);
     const [options, setOptions] = useState<OptionType[]>([]);
 
@@ -33,7 +35,7 @@ const SmartSelect = forwardRef<HTMLSelectElement, SmartSelectProps>((props, ref)
             )?.set;
             nativeSelectValueSetter?.call(selectRef.current, newValue);
 
-            const event = new Event('change', { bubbles: true });
+            const event = new Event('change', {bubbles: true});
             selectRef.current.dispatchEvent(event);
             return true;
         }
@@ -43,7 +45,8 @@ const SmartSelect = forwardRef<HTMLSelectElement, SmartSelectProps>((props, ref)
     useImperativeHandle(ref, () => selectRef.current!, []);
 
     return (
-        <SmartComponent id={id} value={value} options={options} semantic={smartSemantic} type="select" smartOnChange={updateValue}>
+        <SmartComponent id={id} value={value} options={options} semantic={smartSemantic} type="select"
+                        smartOnChange={updateValue}>
             <select ref={selectRef} value={value} id={id} {...restProps}>{children}</select>
         </SmartComponent>
     )

@@ -93,9 +93,22 @@ export interface SmartAgentProviderProps {
 }
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
-    const {callAgent, defaultChatHistoryMemory = 5, customSystemPrompt, currentPagePath, pageDescriptions, allowMultipleSteps = true, children} = props;
+    const {
+        callAgent,
+        defaultChatHistoryMemory = 5,
+        customSystemPrompt,
+        currentPagePath,
+        pageDescriptions,
+        allowMultipleSteps = true,
+        children
+    } = props;
 
-    const {getHierarchy, suggestValueChanges, handleChangeApproval, subscribeAllComponentsLoaded} = useSmartComponentManager();
+    const {
+        getHierarchy,
+        suggestValueChanges,
+        handleChangeApproval,
+        subscribeAllComponentsLoaded
+    } = useSmartComponentManager();
     const [approvalRequired, setApprovalRequired] = useState(false);
     const nextMessages = useRef<AgentOutput[] | undefined>(undefined);
     const [loading, setLoading] = useState(false);
@@ -112,12 +125,12 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
     useEffect(() => {
         saveChatHistoryToSessionStorage(chatHistory);
     }, [chatHistory]);
-    
+
     const sendMessage = useCallback(async (prompt: string, messageRole: ChatMessageCreator, chatHistoryMemory?: number, loadingText?: string): Promise<void> => {
-        if(defaultChatHistoryMemory < 1) {
+        if (defaultChatHistoryMemory < 1) {
             console.error(`Configuration error: defaultChatHistoryMemory has value of ${defaultChatHistoryMemory} and must be greater than 0!`);
             return;
-        } else if(chatHistoryMemory && chatHistoryMemory < 1) {
+        } else if (chatHistoryMemory && chatHistoryMemory < 1) {
             console.error(`Configuration error: chatHistoryMemory has value of ${chatHistoryMemory} and must be greater than 0!`);
             return;
         }
@@ -161,22 +174,26 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
             ]
         )
 
-        const response: AgentResponse  = await callAgent({messages: messages, uiElementIds: uiElementIds, allowMultipleSteps: allowMultipleSteps});
+        const response: AgentResponse = await callAgent({
+            messages: messages,
+            uiElementIds: uiElementIds,
+            allowMultipleSteps: allowMultipleSteps
+        });
         const agentOutput = response.agentOutput;
         const firstOutput = agentOutput[0];
         numSteps.current = agentOutput.length;
-        if(agentOutput.length > 1) {
+        if (agentOutput.length > 1) {
             nextMessages.current = agentOutput.slice(1);
         }
         const newMessages = response.messages.slice(messages.length);
 
-        if(newMessages !== undefined) {
+        if (newMessages !== undefined) {
             const toolMessages = newMessages.map(message => ({message: message, sentTime: (new Date()).toUTCString()}));
             setChatHistory((prev) => [...prev, ...toolMessages]);
         }
         const uiInteractions = firstOutput.uiInteractions;
         const changedDetected = await suggestValueChanges(uiInteractions);
-        if(changedDetected) {
+        if (changedDetected) {
             setApprovalRequired(uiInteractions.length > 0 || approvalRequired);
         } else {
             setApprovalRequired(false);
@@ -196,8 +213,9 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         };
 
         setChatHistory((prev) => [...prev, {
-            message: {role: ChatMessageCreator.AGENT, content: JSON.stringify(output)},
-            sentTime: (new Date()).toUTCString()}]
+                message: {role: ChatMessageCreator.AGENT, content: JSON.stringify(output)},
+                sentTime: (new Date()).toUTCString()
+            }]
         )
     }
 
@@ -211,9 +229,9 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
 
     const changeApproval = useCallback(async (accept: boolean): Promise<void> => {
         await handleChangeApproval(accept);
-        if(accept && nextMessages.current !== undefined) {
+        if (accept && nextMessages.current !== undefined) {
             await suggestValueChanges(nextMessages.current[0].uiInteractions);
-            if(nextMessages.current.length > 0 && numSteps.current !== undefined) {
+            if (nextMessages.current.length > 0 && numSteps.current !== undefined) {
                 addNextChatMessage(nextMessages.current[0], numSteps.current - nextMessages.current.length + 1);
             }
             nextMessages.current = nextMessages.current?.length === 1 ? undefined : nextMessages.current?.slice(1);
@@ -232,7 +250,7 @@ export function SmartAgentProvider(props: SmartAgentProviderProps) {
         // Is used to send a page change event to the agent when the page is loaded
         const unsubscribe = subscribeAllComponentsLoaded(async () => {
             const navigationPath = findPageTransitionPath(loadChatHistoryFromSessionStorage());
-            if(navigationPath !== null && currentPagePath === navigationPath) {
+            if (navigationPath !== null && currentPagePath === navigationPath) {
                 await sendEvent(`Page changed to ${currentPagePath}`);
                 unsubscribe();
             }

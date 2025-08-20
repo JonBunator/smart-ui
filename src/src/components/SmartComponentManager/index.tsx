@@ -72,17 +72,17 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     const elementOnChangeMapping = useRef<ElementOnChangeMap>(new Map());
     const elementOnChangeApprovalMapping = useRef<ElementOnChangeApprovalMap>(new Map());
     const suggestedValueChangesMapping = useRef<SuggestedValueChangesMap>(new Map());
-    const allComponentsLoadedTimeoutId = useRef<NodeJS.Timeout|null>(null);
+    const allComponentsLoadedTimeoutId = useRef<NodeJS.Timeout | null>(null);
     const allComponentsLoadedListener = useRef<Set<() => void>>(new Set());
 
     const addComponent = useCallback((parentID: string, value: SmartComponentValue, smartOnChange?: (value: ValueType) => Promise<boolean>, onChangeApproval?: (accept: boolean, value: ValueType) => Promise<boolean>) => {
         elements.current.set(value.id, value);
 
-        if(smartOnChange) {
+        if (smartOnChange) {
             elementOnChangeMapping.current.set(value.id, smartOnChange);
         }
 
-        if(onChangeApproval) {
+        if (onChangeApproval) {
             elementOnChangeApprovalMapping.current.set(value.id, onChangeApproval);
         }
 
@@ -114,7 +114,7 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     const getHierarchy = useCallback((): SmartComponentElement[] => {
         const buildHierarchy = (identifier: string): SmartComponentElement | null => {
             const value = elements.current.get(identifier);
-            if(!value) return null;
+            if (!value) return null;
 
             const childrenIDs = parentChildrenMapping.current.get(identifier) || new Set();
             const children: SmartComponentElement[] = [];
@@ -149,10 +149,10 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     }, []);
 
     const handleChangeApproval = useCallback(async (accept: boolean): Promise<boolean> => {
-        for(const valueChange of suggestedValueChangesMapping.current.values()) {
+        for (const valueChange of suggestedValueChangesMapping.current.values()) {
             const componentID = valueChange.id;
             const changeApproval = elementOnChangeApprovalMapping.current.get(componentID);
-            if(changeApproval) {
+            if (changeApproval) {
                 await changeApproval(accept, valueChange.value);
             } else {
                 console.warn(`No component found with identifier: ${componentID}`);
@@ -163,12 +163,12 @@ export function SmartComponentManager(props: SubscriptionProviderProps) {
     }, []);
 
     const suggestValueChanges = useCallback(async (updates: ValueUpdate[]): Promise<boolean> => {
-        for(const update of updates) {
-            if(suggestedValueChangesMapping.current.has(update.id)) {
+        for (const update of updates) {
+            if (suggestedValueChangesMapping.current.has(update.id)) {
                 suggestedValueChangesMapping.current.delete(update.id);
             }
             const successful = await changeValue(update);
-            if(successful) {
+            if (successful) {
                 suggestedValueChangesMapping.current.set(update.id, update);
             }
         }
