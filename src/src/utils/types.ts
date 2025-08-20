@@ -140,6 +140,10 @@ export interface AgentOutput {
      * Show yes and no buttons to the user for answering simple questions.
      */
     yesNoButtons: boolean
+    /**
+     * Explains the behavior of the agent to the user.
+     */
+    motivation: string
 }
 
 export interface AgentResponse {

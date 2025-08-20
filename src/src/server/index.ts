@@ -16,6 +16,7 @@ function createOutputSchema(idTypes: string[], allowMultipleSteps: boolean) {
     const UserInteractionGroup = z.object({
         uiInteractions: z.array(UIInteraction).describe("List of suggested UI interactions that should be executed."),
         naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting."),
+        motivation: z.string().describe("Explain the motivation of your behaviour to the user."),
         yesNoButtons: z.boolean().describe("Show yes and no buttons to the user for answering simple questions of the agent."),
     }).describe("Interaction with the user.");
 
@@ -85,7 +86,7 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     const messages = agentInput.messages;
 
     if(message.refusal) {
-        return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false}], messages}
+        return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: message.refusal, yesNoButtons: false, motivation: ""}], messages}
     }
     if(message.content) {
         try {
@@ -98,5 +99,5 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
             console.error(e);
         }
     }
-    return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: "An error occurred", yesNoButtons: false}], messages};
+    return {agentOutput: [{uiInteractions: [], naturalLanguageInteraction: "An error occurred", yesNoButtons: false, motivation: ""}], messages};
 }
