@@ -13,7 +13,7 @@ function createOutputSchema(idTypes: string[], allowMultipleSteps: boolean) {
     const UserInteractionGroup = z.object({
         uiInteractions: z.array(UIInteraction).describe("List of suggested UI interactions that should be executed."),
         naturalLanguageInteraction: z.string().describe("Interaction with the user in natural language. Use Markdown for formatting and highlighting."),
-        motivation: z.string().describe("Explain the motivation of your behaviour to the user."),
+        motivation: z.string().describe("Explain the motivation why your behavior is useful for the user."),
         yesNoButtons: z.boolean().describe("Show yes and no buttons to the user for answering simple questions of the agent."),
     }).describe("Interaction with the user.");
 
