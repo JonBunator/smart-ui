@@ -43,7 +43,6 @@ export async function callAgent(client: OpenAI, agentInput: AgentInput, optional
     const choice = response.choices[0];
     const message = choice.message;
 
-    console.log("message", JSON.stringify(message));
     const toolResults: ChatCompletionMessageParam[] = [];
     if (choice.finish_reason === 'tool_calls' && message.tool_calls) {
         const toolMap: Map<string, ToolFunction> = new Map();
