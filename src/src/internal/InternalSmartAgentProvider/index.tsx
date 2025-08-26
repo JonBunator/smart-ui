@@ -1,6 +1,6 @@
 import {createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {getInstructionPrompt, getNextUIStatePrompt, getPageDescriptions} from "./agentPrompts.ts";
-import {SmartComponentElement, useSmartComponentManager} from "../../components/SmartComponentManager";
+import {SmartComponentElement, useSmartComponentManager} from "../SmartComponentManager";
 import {AgentInput, AgentOutput, ChatMessage, ChatMessageCreator, PageDescription} from "../../utils/types.ts";
 import {ChatCompletionMessageParam} from "openai/resources/chat/completions/completions";
 import {loadChatHistoryFromSessionStorage, saveChatHistoryToSessionStorage} from "../sessionStorage.ts";

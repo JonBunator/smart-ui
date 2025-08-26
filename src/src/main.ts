@@ -6,7 +6,7 @@ export {SmartComponent} from './components/SmartComponent'
 export {SmartGroup} from './components/SmartGroup'
 export {SmartAgentProvider} from './components/SmartAgentProvider'
 export {useSmartAgent} from './internal/InternalSmartAgentProvider'
-export {SmartComponentManager, useSmartComponentManager} from './components/SmartComponentManager'
+export {useSmartComponentManager} from './internal/SmartComponentManager'
 export * from './utils/helpers'
 export type {SmartComponentValue} from './utils/types';
 export type {ValueType} from './utils/types';

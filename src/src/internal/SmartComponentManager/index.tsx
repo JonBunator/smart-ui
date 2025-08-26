@@ -1,6 +1,6 @@
 import {createContext, ReactNode, useCallback, useContext, useMemo, useRef} from 'react';
 import {SmartComponentValue, ValueType, ValueUpdate} from "../../utils/types.ts";
-import SmartComponentParent from "../../internal/SmartComponentParent";
+import SmartComponentParent from "../SmartComponentParent";
 
 /**
  * Element represents value of smart component and children.

@@ -1,7 +1,7 @@
 import React, {cloneElement, ReactNode, useCallback, useEffect, useRef, useState} from "react";
 import SmartComponentParent, {useSmartComponentParent} from "../../internal/SmartComponentParent";
 import {SmartComponentValue, ValueType} from "../../utils/types.ts";
-import {useSmartComponentManager} from "../SmartComponentManager";
+import {useSmartComponentManager} from "../../internal/SmartComponentManager";
 
 function getID() {
     return Math.random().toString(36).substring(2, 9);

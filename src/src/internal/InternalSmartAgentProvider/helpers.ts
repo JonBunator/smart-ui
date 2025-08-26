@@ -1,4 +1,4 @@
-import {SmartComponentElement} from "../../components/SmartComponentManager";
+import {SmartComponentElement} from "../SmartComponentManager";
 import {ChatMessage, ChatMessageCreator, ValueUpdate} from "../../utils/types.ts";
 
 type InteractionFunction = (value: SmartComponentElement) => string | boolean | number;

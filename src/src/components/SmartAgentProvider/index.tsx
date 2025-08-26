@@ -2,7 +2,7 @@ import {
     InternalSmartAgentProvider,
     SmartAgentProviderProps
 } from "../../internal/InternalSmartAgentProvider";
-import {SmartComponentManager} from "../SmartComponentManager";
+import {SmartComponentManager} from "../../internal/SmartComponentManager";
 
 export function SmartAgentProvider(props: SmartAgentProviderProps) {
     const {children, ...restProps} = props;
