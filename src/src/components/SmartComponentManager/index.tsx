@@ -65,7 +65,7 @@ type ElementOnChangeMap = Map<string, (value: ValueType) => Promise<boolean>>;
 type ElementOnChangeApprovalMap = Map<string, (accept: boolean, value: ValueType) => Promise<boolean>>;
 type SuggestedValueChangesMap = Map<string, ValueUpdate>;
 
-export function SmartComponentManager(props: SubscriptionProviderProps) {
+const SmartComponentManager = (props: SubscriptionProviderProps) => {
     const {children} = props;
     const elements = useRef<SmartComponentValueMap>(new Map());
     const parentChildrenMapping = useRef<ParentChildMap>(new Map());
@@ -205,3 +205,5 @@ export function useSmartComponentManager(): SmartComponentContextType {
     }
     return context;
 }
+
+export {SmartComponentManager};

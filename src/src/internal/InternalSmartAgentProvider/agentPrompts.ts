@@ -1,4 +1,4 @@
-import {SmartComponentElement} from "../SmartComponentManager";
+import {SmartComponentElement} from "../../components/SmartComponentManager";
 import {UIInteractionExample} from "./helpers.ts";
 import {PageDescription} from "../../utils/types.ts";
 
