@@ -98,7 +98,7 @@ const InternalSmartAgentProvider = (props: SmartAgentProviderProps) => {
         customSystemPrompt,
         currentPagePath,
         pageDescriptions,
-        allowMultipleSteps = true,
+        allowMultipleSteps = false,
         children
     } = props;
 
