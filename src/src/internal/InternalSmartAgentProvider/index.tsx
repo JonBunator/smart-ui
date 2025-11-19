@@ -96,7 +96,7 @@ const InternalSmartAgentProvider = (props: SmartAgentProviderProps) => {
         callAgent,
         defaultChatHistoryMemory = 5,
         customSystemPrompt,
-        currentPagePath,
+        currentPagePath = "/",
         pageDescriptions,
         allowMultipleSteps = false,
         children
